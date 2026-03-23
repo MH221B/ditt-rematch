@@ -1,0 +1,6 @@
+@DITT.Host_HostAddress = http://localhost:5080
+
+GET {{DITT.Host_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
