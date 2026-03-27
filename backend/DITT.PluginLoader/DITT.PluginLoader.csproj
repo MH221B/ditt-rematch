@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DITT.Core\DITT.Core.csproj" />
+    <ProjectReference Include="..\..\sdk\DITT.SDK\DITT.SDK.csproj" />
   </ItemGroup>
 
   <ItemGroup>
