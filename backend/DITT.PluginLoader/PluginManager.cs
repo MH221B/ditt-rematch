@@ -1,3 +1,4 @@
+using System.Reflection;
 using DITT.Core.Models;
 using DITT.SDK;
 using Microsoft.Extensions.Logging;
@@ -94,6 +95,47 @@ namespace DITT.PluginLoader
                 //  Unload the AssemblyLoadContext to free resources
                 plugin.LoadContext?.Unload();
                 _logger.LogInformation("Plugin unloaded: {Name}", name);
+            }
+        }
+
+        public void RegisterBuiltInTools()
+        {
+            // Scan the HOST assembly for IToolPlugin implementations
+            var builtInTypes = Assembly.GetEntryAssembly()!
+                .GetTypes()
+                .Where(t => typeof(IToolPlugin).IsAssignableFrom(t) 
+                            && !t.IsAbstract 
+                            && !t.IsInterface);    
+            foreach (var type in builtInTypes)
+            {
+                try
+                {
+                    var instance = (IToolPlugin)Activator.CreateInstance(type)!;
+                    var loadedPlugin = new LoadedPlugin
+                    {
+                        Name = instance.Name,
+                        Version = instance.Version,
+                        Description = instance.Description,
+                        IsBuiltIn = true,
+                        Instance = instance,
+                        LoadContext = null, // Built-in plugins don't have a separate context
+                        LoadedAt = DateTime.UtcNow,
+                    };
+
+                    lock (_lock)
+                    {
+                        _plugins[loadedPlugin.Name] = loadedPlugin;
+                    }
+
+                    _logger.LogInformation(
+                        "Built-in plugin registered: {Name} v{Version}",
+                        instance.Name,
+                        instance.Version);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to register built-in plugin: {TypeName}", type.FullName);
+                }
             }
         }
 

@@ -4,7 +4,7 @@ namespace DITT.Core.Models
     {
         Task<ValidationResult> LoadPluginAsync(string dllPath);
         void UnloadPlugin(string name);
-        // void RegisterBuiltInTools();
+        void RegisterBuiltInTools();
         // IEnumerable<LoadedPluginInfo> GetLoadedPlugins();
         // bool IsLoaded(string name);
     }
