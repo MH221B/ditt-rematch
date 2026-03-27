@@ -139,6 +139,20 @@ namespace DITT.PluginLoader
             }
         }
 
+        public IEnumerable<LoadedPluginInfo> GetLoadedPlugins()
+        {
+            lock (_lock)
+            {
+                return _plugins.Values.Select(p => new LoadedPluginInfo(
+                    p.Name,
+                    p.Version,
+                    p.Description,
+                    p.IsBuiltIn,
+                    p.LoadedAt
+                )).ToList();
+            }
+        }
+
         private IEnumerable<string> GetLoadedPluginNames()
         {
             lock (_lock)
