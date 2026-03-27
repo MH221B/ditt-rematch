@@ -74,6 +74,29 @@ namespace DITT.PluginLoader
             }
         }
 
+        public void UnloadPlugin(string name)
+        {
+            lock (_lock)
+            {
+                if (!_plugins.TryGetValue(name, out var plugin))
+                {
+                    _logger.LogWarning("Plugin not found for unload: {Name}", name);
+                    return;
+                }
+
+                if (plugin.IsBuiltIn)
+                {
+                    _logger.LogWarning("Cannot unload built-in plugin: {Name}", name);
+                    return;
+                }
+
+                _plugins.Remove(name);
+                //  Unload the AssemblyLoadContext to free resources
+                plugin.LoadContext?.Unload();
+                _logger.LogInformation("Plugin unloaded: {Name}", name);
+            }
+        }
+
         private IEnumerable<string> GetLoadedPluginNames()
         {
             lock (_lock)
