@@ -49,5 +49,25 @@ namespace DITT.Host.Services
 
             await _db.SaveChangesAsync();
         }
+
+        public async Task UnregisterAsync(string name)
+        {
+            var tool = await _db.Tools.FirstOrDefaultAsync(t => t.Name == name);
+            if (tool != null)
+            {
+                tool.Status = ToolStatus.Inactive;
+                await _db.SaveChangesAsync();
+                _logger.LogInformation("Unregistered tool: {Name}", name);
+            }
+            else
+            {
+                _logger.LogWarning("Attempted to unregister non-existent tool: {Name}", name);
+            }
+        }
+
+        public async Task<IEnumerable<Tool>> GetAllActiveAsync()
+        {
+            return await _db.Tools.Where(t => t.Status == ToolStatus.Active).OrderBy(t => t.Name).ToListAsync();
+        }
     }
 }
