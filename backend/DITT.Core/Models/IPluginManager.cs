@@ -6,7 +6,7 @@ namespace DITT.Core.Models
         void UnloadPlugin(string name);
         void RegisterBuiltInTools();
         IEnumerable<LoadedPluginInfo> GetLoadedPlugins();
-        // bool IsLoaded(string name);
+        bool IsLoaded(string name);
     }
 }
 

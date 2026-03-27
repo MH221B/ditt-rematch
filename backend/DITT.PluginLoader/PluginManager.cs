@@ -153,6 +153,30 @@ namespace DITT.PluginLoader
             }
         }
 
+        public bool IsLoaded(string name)
+        {
+            lock (_lock)
+            {
+                return _plugins.ContainsKey(name);
+            }
+        }
+        
+        internal IToolPlugin? GetPluginInstance(string name)
+        {
+            lock (_lock)
+            {
+                return _plugins.TryGetValue(name, out var plugin) ? plugin.Instance : null;
+            }
+        }
+
+        internal IEnumerable<IToolPlugin> GetAllInstances()
+        {
+            lock (_lock)
+            {
+                return _plugins.Values.Select(p => p.Instance).ToList();
+            }
+        }
+
         private IEnumerable<string> GetLoadedPluginNames()
         {
             lock (_lock)
