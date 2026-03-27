@@ -5,6 +5,7 @@ using DotNetEnv;
 using DITT.PluginLoader;
 using DITT.Host.Services.Interfaces;
 using DITT.Host.Services;
+using DITT.Core.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +15,6 @@ if (File.Exists(".env"))
     Env.Load(".env");
 }
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -33,16 +32,15 @@ if (string.IsNullOrEmpty(password))
 
 var connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
 
-// Add database context
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 var pluginDirectory = builder.Configuration["PluginDirectory"]
     ?? Path.Combine(Directory.GetCurrentDirectory(), "plugins");
 
-builder.Services.AddSingleton(sp => 
+builder.Services.AddSingleton(sp =>
     new PluginManager(
-        sp.GetRequiredService<ILogger<PluginManager>>(), 
+        sp.GetRequiredService<ILogger<PluginManager>>(),
         pluginDirectory
     ));
 
@@ -59,7 +57,7 @@ foreach (var plugin in tempPluginManager.GetAllInstances())
     plugin.ConfigureServices(builder.Services);
 }
 
-// CORS — allow Angular dev server
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevPolicy", policy =>
@@ -70,7 +68,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Middleware configuration
+// Middleware
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -82,7 +80,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Catch-all route for dynamic plugin request handling
-var pluginManagerForRouting = app.Services.GetRequiredService<PluginManager>();
+var pluginManager = app.Services.GetRequiredService<PluginManager>();
+
 app.Map("/api/tools/{pluginName}/{**path}", async (HttpContext context) =>
 {
     var pluginName = context.Request.RouteValues["pluginName"]?.ToString();
@@ -90,22 +89,16 @@ app.Map("/api/tools/{pluginName}/{**path}", async (HttpContext context) =>
     if (string.IsNullOrEmpty(pluginName))
     {
         context.Response.StatusCode = 400;
-        await context.Response.WriteAsJsonAsync(new 
-        { 
-            Message = "Plugin name is required" 
-        });
+        await context.Response.WriteAsJsonAsync(new { Message = "Plugin name is required" });
         return;
     }
 
-    var plugin = pluginManagerForRouting.GetPluginInstance(pluginName);
+    var plugin = pluginManager.GetPluginInstance(pluginName);
 
     if (plugin == null)
     {
         context.Response.StatusCode = 404;
-        await context.Response.WriteAsJsonAsync(new 
-        { 
-            Message = $"Plugin '{pluginName}' not found" 
-        });
+        await context.Response.WriteAsJsonAsync(new { Message = $"Plugin '{pluginName}' not found" });
         return;
     }
 
@@ -116,20 +109,41 @@ app.Map("/api/tools/{pluginName}/{**path}", async (HttpContext context) =>
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate(); // Apply any pending migrations
+    await dbContext.Database.MigrateAsync();
 
-    // Register built-in tools on startup
-    var pluginManager = app.Services.GetRequiredService<PluginManager>();
+    // Register built-in tools
     pluginManager.RegisterBuiltInTools();
 
-    //  Sync built-in tools with DB
-    var registrationService = scope.ServiceProvider.GetRequiredService<IToolRegistrationService>();
+    var registrationService = scope.ServiceProvider
+        .GetRequiredService<IToolRegistrationService>();
 
+    // Sync built-in tools to DB
     foreach (var plugin in pluginManager.GetAllInstances())
-    {
         await registrationService.RegisterAsync(plugin, isBuiltIn: true);
+
+    // Reload uploaded plugins from disk on startup
+    var uploadedTools = await dbContext.Tools
+        .Where(t => !t.IsBuiltIn && t.Status == ToolStatus.Active)
+        .ToListAsync();
+
+    foreach (var tool in uploadedTools)
+    {
+        var dllPath = Path.Combine(pluginDirectory, tool.Name, $"{tool.Name}.dll");
+
+        if (File.Exists(dllPath))
+        {
+            await pluginManager.LoadPluginAsync(dllPath);
+            Console.WriteLine($"Reloaded plugin: {tool.Name}");
+        }
+        else
+        {
+            // DLL missing — mark as inactive
+            tool.Status = ToolStatus.Inactive;
+            Console.WriteLine($"Plugin DLL missing: {tool.Name}");
+        }
     }
-        
+
+    await dbContext.SaveChangesAsync();
 }
 
 app.Run();
