@@ -59,13 +59,18 @@ namespace DITT.Host.Controllers
 
             // Register in DB
             var plugin = _pluginManager.GetAllInstances()
-                .First(p => p.Name == Path.GetFileNameWithoutExtension(file.FileName));
+                .FirstOrDefault(p => p.Name == result.LoadedPluginName);
+            
+            if (plugin == null)
+                return StatusCode(500, new { Message = "Plugin loaded but could not be retrieved" });
             
             await _registrationService.RegisterAsync(plugin, isBuiltIn: false);
 
             return Ok(new 
             { 
                 Message = "Plugin uploaded and loaded successfully.",
+                plugin.Name,
+                plugin.Version,
                 result.Warnings 
             });
         }

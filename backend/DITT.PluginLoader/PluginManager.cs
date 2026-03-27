@@ -66,7 +66,7 @@ namespace DITT.PluginLoader
                     instance.Name,
                     instance.Version);
                 
-                return ValidationResult.Success();
+                return ValidationResult.Success(instance.Name);
             }
             catch (Exception ex)
             {
