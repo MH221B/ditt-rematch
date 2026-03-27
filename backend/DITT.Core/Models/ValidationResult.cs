@@ -7,5 +7,9 @@ public class ValidationResult
     public List<string> Warnings { get; set; } = [];
 
     public static ValidationResult Success() => new() { IsValid = true };
-    public static ValidationResult Failure(params string[] errors) => new() { IsValid = false, Errors = errors.ToList() };
+    public static ValidationResult Failure(params string[] errors) => new() 
+    { 
+        IsValid = false, 
+        Errors = errors.ToList() 
+    };
 }
