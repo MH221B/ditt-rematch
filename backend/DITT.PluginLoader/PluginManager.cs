@@ -161,7 +161,7 @@ namespace DITT.PluginLoader
             }
         }
 
-        internal IToolPlugin? GetPluginInstance(string name)
+        public IToolPlugin? GetPluginInstance(string name)
         {
             lock (_lock)
             {

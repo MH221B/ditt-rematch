@@ -48,6 +48,17 @@ builder.Services.AddSingleton(sp =>
 
 builder.Services.AddScoped<IToolRegistrationService, ToolRegistrationService>();
 
+// Configure built-in plugins' services before building the app
+var tempPluginManager = new PluginManager(
+    new Logger<PluginManager>(new LoggerFactory()),
+    pluginDirectory
+);
+tempPluginManager.RegisterBuiltInTools();
+foreach (var plugin in tempPluginManager.GetAllInstances())
+{
+    plugin.ConfigureServices(builder.Services);
+}
+
 // CORS — allow Angular dev server
 builder.Services.AddCors(options =>
 {
@@ -70,6 +81,38 @@ app.UseCors("DevPolicy");
 app.UseAuthorization();
 app.MapControllers();
 
+// Catch-all route for dynamic plugin request handling
+var pluginManagerForRouting = app.Services.GetRequiredService<PluginManager>();
+app.Map("/api/tools/{pluginName}/{**path}", async (HttpContext context) =>
+{
+    var pluginName = context.Request.RouteValues["pluginName"]?.ToString();
+
+    if (string.IsNullOrEmpty(pluginName))
+    {
+        context.Response.StatusCode = 400;
+        await context.Response.WriteAsJsonAsync(new 
+        { 
+            Message = "Plugin name is required" 
+        });
+        return;
+    }
+
+    var plugin = pluginManagerForRouting.GetPluginInstance(pluginName);
+
+    if (plugin == null)
+    {
+        context.Response.StatusCode = 404;
+        await context.Response.WriteAsJsonAsync(new 
+        { 
+            Message = $"Plugin '{pluginName}' not found" 
+        });
+        return;
+    }
+
+    var handler = plugin.CreateRequestHandler();
+    await handler(context);
+});
+
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -83,7 +126,10 @@ using (var scope = app.Services.CreateScope())
     var registrationService = scope.ServiceProvider.GetRequiredService<IToolRegistrationService>();
 
     foreach (var plugin in pluginManager.GetAllInstances())
+    {
         await registrationService.RegisterAsync(plugin, isBuiltIn: true);
+    }
+        
 }
 
 app.Run();
