@@ -160,7 +160,7 @@ namespace DITT.PluginLoader
                 return _plugins.ContainsKey(name);
             }
         }
-        
+
         internal IToolPlugin? GetPluginInstance(string name)
         {
             lock (_lock)
@@ -169,7 +169,7 @@ namespace DITT.PluginLoader
             }
         }
 
-        internal IEnumerable<IToolPlugin> GetAllInstances()
+        public IEnumerable<IToolPlugin> GetAllInstances()
         {
             lock (_lock)
             {
