@@ -2,6 +2,9 @@ using DITT.Host.Data;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using DotNetEnv;
+using DITT.PluginLoader;
+using DITT.Host.Services.Interfaces;
+using DITT.Host.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +37,16 @@ var connectionString = $"Host={host};Port={port};Database={database};Username={u
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+var pluginDirectory = builder.Configuration["PluginDirectory"]
+    ?? Path.Combine(Directory.GetCurrentDirectory(), "plugins");
+
+builder.Services.AddSingleton(sp => 
+    new PluginManager(
+        sp.GetRequiredService<ILogger<PluginManager>>(), 
+        pluginDirectory
+    ));
+
+builder.Services.AddScoped<IToolRegistrationService, ToolRegistrationService>();
 
 // CORS — allow Angular dev server
 builder.Services.AddCors(options =>
@@ -61,6 +74,16 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate(); // Apply any pending migrations
+
+    // Register built-in tools on startup
+    var pluginManager = app.Services.GetRequiredService<PluginManager>();
+    pluginManager.RegisterBuiltInTools();
+
+    //  Sync built-in tools with DB
+    var registrationService = scope.ServiceProvider.GetRequiredService<IToolRegistrationService>();
+
+    foreach (var plugin in pluginManager.GetAllInstances())
+        await registrationService.RegisterAsync(plugin, isBuiltIn: true);
 }
 
 app.Run();
