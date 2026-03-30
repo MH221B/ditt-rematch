@@ -22,7 +22,7 @@ public abstract class ToolPluginBase : IToolPlugin
         };
     }
 
-    // ✅ Developer overrides this
+    // Developer overrides this
     protected virtual async Task HandleRequest(HttpContext context, string path)
     {
         context.Response.StatusCode = 404;

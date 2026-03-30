@@ -16,7 +16,7 @@ public class TestPlugin : ToolPluginBase
             case "hello":
                 await context.Response.WriteAsJsonAsync(new
                 {
-                    Message = "👋 Hello from TestPlugin!",
+                    Message = "Hello from TestPlugin!",
                     Timestamp = DateTime.UtcNow
                 });
                 break;
