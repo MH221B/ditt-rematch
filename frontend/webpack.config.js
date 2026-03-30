@@ -1,6 +1,6 @@
-import { shareAll, withModuleFederationPlugin } from '@angular-architects/module-federation/webpack';
+const { shareAll, withModuleFederationPlugin } = require('@angular-architects/module-federation/webpack.js');
 
-export default withModuleFederationPlugin({
+module.exports = withModuleFederationPlugin({
 
   name: 'DITT',
   // Host has no remotes defined at build time
