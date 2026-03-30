@@ -22,57 +22,60 @@ namespace DITT.PluginLoader
 
         public async Task<ValidationResult> LoadPluginAsync(string dllPath)
         {
-            _logger.LogInformation("Attempting to load plugin from {DllPath}", dllPath);
-
-            // Validate
-            var validator = new PluginValidator(GetLoadedPluginNames());
-            var validation = validator.Validate(dllPath);
-            if (!validation.IsValid)
+            return await Task.Run(() =>
             {
-                _logger.LogWarning("Plugin validation failed for {DllPath}: {Errors}", dllPath, string.Join(", ", validation.Errors));
-                return validation;
-            }
+                _logger.LogInformation("Attempting to load plugin from {DllPath}", dllPath);
 
-            try
-            {
-                var context = new PluginLoadContext(dllPath);
-                var assembly = context.LoadFromAssemblyPath(dllPath);
-
-                var pluginType = assembly.GetTypes()
-                                        .First(t => typeof(IToolPlugin).IsAssignableFrom(t) 
-                                        && !t.IsAbstract && !t.IsInterface);
-                
-                var instance = (IToolPlugin)Activator.CreateInstance(pluginType)!;
-
-                var loadedPlugin = new LoadedPlugin
+                // Validate
+                var validator = new PluginValidator(GetLoadedPluginNames());
+                var validation = validator.Validate(dllPath);
+                if (!validation.IsValid)
                 {
-                    Name = instance.Name,
-                    Version = instance.Version,
-                    Description = instance.Description,
-                    IsBuiltIn = false,
-                    Instance = instance,
-                    LoadContext = context,
-                    LoadedAt = DateTime.UtcNow,
-                    DllPath = dllPath
-                };
-
-                lock (_lock)
-                {
-                    _plugins[loadedPlugin.Name] = loadedPlugin;
+                    _logger.LogWarning("Plugin validation failed for {DllPath}: {Errors}", dllPath, string.Join(", ", validation.Errors));
+                    return validation;
                 }
 
-                _logger.LogInformation(
-                    "Plugin loaded: {Name} v{Version}",
-                    instance.Name,
-                    instance.Version);
-                
-                return ValidationResult.Success(instance.Name);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to load plugin from {DllPath}", dllPath);
-                return ValidationResult.Failure($"Failed to load plugin: {ex.Message}");
-            }
+                try
+                {
+                    var context = new PluginLoadContext(dllPath);
+                    var assembly = context.LoadFromAssemblyPath(dllPath);
+
+                    var pluginType = assembly.GetTypes()
+                                            .First(t => typeof(IToolPlugin).IsAssignableFrom(t) 
+                                            && !t.IsAbstract && !t.IsInterface);
+                    
+                    var instance = (IToolPlugin)Activator.CreateInstance(pluginType)!;
+
+                    var loadedPlugin = new LoadedPlugin
+                    {
+                        Name = instance.Name,
+                        Version = instance.Version,
+                        Description = instance.Description,
+                        IsBuiltIn = false,
+                        Instance = instance,
+                        LoadContext = context,
+                        LoadedAt = DateTime.UtcNow,
+                        DllPath = dllPath
+                    };
+
+                    lock (_lock)
+                    {
+                        _plugins[loadedPlugin.Name] = loadedPlugin;
+                    }
+
+                    _logger.LogInformation(
+                        "Plugin loaded: {Name} v{Version}",
+                        instance.Name,
+                        instance.Version);
+                    
+                    return ValidationResult.Success(instance.Name);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to load plugin from {DllPath}", dllPath);
+                    return ValidationResult.Failure($"Failed to load plugin: {ex.Message}");
+                }
+            });
         }
 
         public void UnloadPlugin(string name)
