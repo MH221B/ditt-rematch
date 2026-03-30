@@ -77,41 +77,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("DevPolicy");
 app.UseAuthorization();
-app.MapControllers();
-
-// Catch-all route for dynamic plugin request handling
-var pluginManager = app.Services.GetRequiredService<PluginManager>();
-
-app.Map("/api/tools/{pluginName}/{**path}", async (HttpContext context) =>
-{
-    var pluginName = context.Request.RouteValues["pluginName"]?.ToString();
-
-    if (string.IsNullOrEmpty(pluginName))
-    {
-        context.Response.StatusCode = 400;
-        await context.Response.WriteAsJsonAsync(new { Message = "Plugin name is required" });
-        return;
-    }
-
-    var plugin = pluginManager.GetPluginInstance(pluginName);
-
-    if (plugin == null)
-    {
-        context.Response.StatusCode = 404;
-        await context.Response.WriteAsJsonAsync(new { Message = $"Plugin '{pluginName}' not found" });
-        return;
-    }
-
-    var handler = plugin.CreateRequestHandler();
-    await handler(context);
-});
+app.MapControllers(); 
 
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.MigrateAsync();
 
-    // Register built-in tools
+    var pluginManager = app.Services.GetRequiredService<PluginManager>();
     pluginManager.RegisterBuiltInTools();
 
     var registrationService = scope.ServiceProvider
@@ -133,13 +106,12 @@ using (var scope = app.Services.CreateScope())
         if (File.Exists(dllPath))
         {
             await pluginManager.LoadPluginAsync(dllPath);
-            Console.WriteLine($"Reloaded plugin: {tool.Name}");
+            Console.WriteLine($"♻️ Reloaded plugin: {tool.Name}");
         }
         else
         {
-            // DLL missing — mark as inactive
             tool.Status = ToolStatus.Inactive;
-            Console.WriteLine($"Plugin DLL missing: {tool.Name}");
+            Console.WriteLine($"⚠️ Plugin DLL missing: {tool.Name}");
         }
     }
 
