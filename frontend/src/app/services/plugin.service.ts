@@ -11,12 +11,12 @@ export class PluginService {
   constructor(private http: HttpClient) {}
 
   // Get all loaded plugins
-  getTools(): Observable<Tool[]> {
+  getPlugins(): Observable<Tool[]> {
     return this.http.get<Tool[]>(`${this.baseUrl}/api/plugins`);
   }
 
-  // Get single tool details
-  getTool(name: string): Observable<Tool> {
+  // Get single plugin details
+  getPlugin(name: string): Observable<Tool> {
     return this.http.get<Tool>(`${this.baseUrl}/api/plugins/${name}`);
   }
 
@@ -30,10 +30,5 @@ export class PluginService {
   // Unload plugin
   unloadPlugin(name: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/api/plugins/unload?name=${name}`, {});
-  }
-
-  // Invoke tool endpoint
-  invokeTool(pluginName: string, path: string, body?: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/tools/${pluginName}/${path}`, body);
   }
 }
