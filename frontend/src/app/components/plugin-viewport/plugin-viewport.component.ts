@@ -15,14 +15,16 @@ import { Tool } from '../../models/tool.model';
         </div>
       } @else {
         <div class="viewport__header">
-          <h2>{{ selectedTool.name }}</h2>
-          <span class="version">v{{ selectedTool.version }}</span>
-          @if (selectedTool.isBuiltIn) {
-            <span class="badge badge--builtin">Built-in</span>
-          }
-          @if (selectedTool.isPremium) {
-            <span class="badge badge--premium">Premium</span>
-          }
+          <div class="container">
+            <h2>{{ selectedTool.name }}</h2>
+            <span class="version">v{{ selectedTool.version }}</span>
+            @if (selectedTool.isBuiltIn) {
+              <span class="badge badge--builtin">Built-in</span>
+            }
+            @if (selectedTool.isPremium) {
+              <span class="badge badge--premium">Premium</span>
+            }
+          </div>
         </div>
         <div class="viewport__content">
           <!-- Phase 5+: Web Component renders here -->
@@ -48,25 +50,30 @@ import { Tool } from '../../models/tool.model';
       align-items: center;
       justify-content: center;
       height: 100%;
-      color: #666;
+      color: var(--text-color);
     }
 
     .viewport__header {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--secondary-color-1);
+      background: var(--secondary-color-1);
+    }
+
+    .viewport__header .container {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid #e0e0e0;
-      background: #fafafa;
     }
 
     .viewport__header h2 {
       margin: 0;
       font-size: 1.25rem;
+      color: var(--text-color);
     }
 
     .version {
-      color: #888;
+      color: var(--text-color);
+      opacity: 0.6;
       font-size: 0.85rem;
     }
 
@@ -78,30 +85,35 @@ import { Tool } from '../../models/tool.model';
     }
 
     .badge--builtin {
-      background: #e3f2fd;
-      color: #1565c0;
+      background: var(--secondary-color-3);
+      opacity: 0.8;
+      color: var(--text-color);
     }
 
     .badge--premium {
-      background: #fff8e1;
-      color: #f57f17;
+      background: var(--secondary-color-4);
+      opacity: 0.8;
+      color: var(--text-color);
     }
 
     .viewport__content {
       flex: 1;
       padding: 1.5rem;
       overflow-y: auto;
+      background: var(--background-color);
     }
 
     .tool-placeholder {
-      color: #666;
+      color: var(--text-color);
+      opacity: 0.7;
       text-align: center;
       margin-top: 2rem;
     }
 
     .hint {
       font-size: 0.85rem;
-      color: #aaa;
+      color: var(--text-color);
+      opacity: 0.5;
       font-style: italic;
     }
   `]

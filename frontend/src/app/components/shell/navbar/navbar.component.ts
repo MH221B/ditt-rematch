@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <header class="p-1 navbar-bg">
-      <div class="container">
+      <div class="container p-0">
         <nav class="navbar navbar-expand-xxl">
           <div class="container-fluid">
             <!-- Navbar Brand and Offcanvas Toggle Button -->
