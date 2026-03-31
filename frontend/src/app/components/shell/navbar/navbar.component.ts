@@ -6,55 +6,98 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <nav class="navbar">
-      <div class="navbar__brand">
-        <span class="navbar__logo">🔧</span>
-        <span class="navbar__title">DITT</span>
-        <span class="navbar__subtitle">Developer IT Tools</span>
+    <header class="p-1 navbar-bg">
+      <div class="container">
+        <nav class="navbar navbar-expand-xxl">
+          <div class="container-fluid">
+            <!-- Navbar Brand and Offcanvas Toggle Button -->
+            <div class="d-flex align-items-center">
+              <!-- Menu Icon Button -->
+              @if (!isAdmin) {
+                <button class="btn btn-outline-light me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu">
+                  <i class="bi bi-list fs-2"></i>
+                </button>
+              }
+
+              <!-- Navbar Brand -->
+              <a class="navbar-brand" [href]="isAdmin ? '/admin' : '/'">DITT</a>
+
+              <!-- Nav Links (Admin only for now) -->
+              @if (isAdmin) {
+                <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="/upload">Upload</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/admin/manage-request">Manage Requests</a>
+                  </li>
+                </ul>
+              }
+
+              <!-- Favorite Tools Link (non-admin only) -->
+              @if (!isAdmin) {
+                <ul class="navbar-nav ms-2">
+                  <li class="nav-item">
+                    <a class="nav-link" href="/favorites">Favorite Tools</a>
+                  </li>
+                </ul>
+              }
+            </div>
+
+            <!-- Search Button -->
+            @if (!isAdmin) {
+              <button class="btn btn-outline-light search-button" data-bs-toggle="modal" data-bs-target="#searchModal">
+                <i class="bi bi-search"></i> Search for a tool
+              </button>
+            }
+
+            <!-- Dynamic User Dropdown or Login/Signup Buttons -->
+            <div class="ms-auto">
+              @if (isLoggedIn) {
+                <!-- Dropdown Menu for Logged-In User -->
+                <div class="dropdown">
+                  <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle me-2"></i>
+                    <span>{{ username }}</span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    @if (!isAdmin && !isPremium) {
+                      <li>
+                        <a class="dropdown-item" href="#" (click)="setPremium()">Go Premium</a>
+                      </li>
+                    }
+                    @if (!isAdmin && isPremium) {
+                      <li>
+                        <a class="dropdown-item text-muted" href="#">Go Premium</a>
+                      </li>
+                    }
+                    <li><a class="dropdown-item" href="#" (click)="logout()">Logout</a></li>
+                  </ul>
+                </div>
+              } @else {
+                <!-- Login and Signup Buttons -->
+                <a href="/login" class="btn btn-outline-light me-2">Login</a>
+                <a href="/signup" class="btn btn-primary">Sign Up</a>
+              }
+            </div>
+          </div>
+        </nav>
       </div>
-      <div class="navbar__actions">
-        <span class="navbar__version">v1.0.0</span>
-      </div>
-    </nav>
-  `,
-  styles: [`
-    .navbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1.5rem;
-      height: 56px;
-      background: #1a1a2e;
-      color: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .navbar__brand {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .navbar__logo {
-      font-size: 1.5rem;
-    }
-
-    .navbar__title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-    }
-
-    .navbar__subtitle {
-      font-size: 0.75rem;
-      color: #aaa;
-      margin-left: 0.25rem;
-    }
-
-    .navbar__version {
-      font-size: 0.75rem;
-      color: #aaa;
-    }
-  `]
+    </header>
+  `
 })
-export class NavbarComponent {}
+export class NavbarComponent {
+  // Mock user state (replace with auth service later)
+  isLoggedIn = false;
+  username = 'User';
+  isAdmin = false;
+  isPremium = false;
+
+  setPremium(): void {
+    console.log('Premium subscription feature not yet implemented');
+  }
+
+  logout(): void {
+    console.log('Logout feature not yet implemented');
+  }
+}

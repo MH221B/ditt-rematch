@@ -9,178 +9,55 @@ import { Tool, ToolStatus } from '../../../models/tool.model';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <aside class="sidebar">
-      <div class="sidebar__header">
-        <span>Tools</span>
-        <span class="sidebar__count">{{ tools.length }}</span>
+    <div class="custom-offcanvas offcanvas offcanvas-start" tabindex="-1" id="offcanvasMenu" aria-labelledby="offcanvasMenuLabel" data-bs-scroll="true" data-bs-backdrop="false">
+      <div class="offcanvas-header">
+        <div class="offcanvas-title">
+          <h4 class="fw-bold">DITT</h4>
+          <p class="mb-0">Developers' IT Tools</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
 
-      @if (loading) {
-        <div class="sidebar__loading">Loading tools...</div>
-      } @else if (error) {
-        <div class="sidebar__error">
-          ⚠️ Failed to load tools
-          <button (click)="loadTools()">Retry</button>
-        </div>
-      } @else {
-        <!-- Built-in Tools -->
-        @if (builtInTools.length > 0) {
-          <div class="sidebar__group">
-            <div class="sidebar__group-label">Built-in</div>
-            @for (tool of builtInTools; track tool.name) {
-              <button
-                class="sidebar__item"
-                [class.sidebar__item--active]="selectedTool?.name === tool.name"
-                (click)="selectTool(tool)">
-                <span class="sidebar__item-name">{{ tool.name }}</span>
-                <span class="sidebar__item-version">v{{ tool.version }}</span>
-              </button>
-            }
+      <div class="offcanvas-body">
+        @if (loading) {
+          <div class="text-center text-muted">
+            <div class="spinner-border spinner-border-sm mb-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading tools...</p>
           </div>
-        }
-
-        <!-- Plugin Tools -->
-        @if (pluginTools.length > 0) {
-          <div class="sidebar__group">
-            <div class="sidebar__group-label">Plugins</div>
-            @for (tool of pluginTools; track tool.name) {
-              <button
-                class="sidebar__item"
-                [class.sidebar__item--active]="selectedTool?.name === tool.name"
-                (click)="selectTool(tool)">
-                <span class="sidebar__item-name">{{ tool.name }}</span>
-                @if (tool.isPremium) {
-                  <span class="sidebar__item-premium">★</span>
-                }
-                <span class="sidebar__item-version">v{{ tool.version }}</span>
-              </button>
-            }
+        } @else if (error) {
+          <div class="alert alert-warning" role="alert">
+            ⚠️ Failed to load tools
+            <button class="btn btn-sm btn-outline-warning d-block w-100 mt-2" (click)="loadTools()">Retry</button>
           </div>
+        } @else if (tools.length === 0) {
+          <p class="text-muted text-center">No tools available</p>
+        } @else {
+          <ul class="list-unstyled">
+            @for (tool of tools; track tool.name) {
+              <li class="mb-2">
+                <a href="#" class="d-flex align-items-center justify-content-between text-decoration-none tool-item" (click)="selectTool(tool)">
+                  <span class="tool-name">{{ tool.name }}</span>
+                  @if (tool.isPremium) {
+                    <i class="bi bi-star-fill text-warning ms-2"></i>
+                  }
+                  <span class="tool-version ms-2">v{{ tool.version }}</span>
+                </a>
+              </li>
+            }
+          </ul>
         }
-
-        @if (tools.length === 0) {
-          <div class="sidebar__empty">No tools available</div>
-        }
-      }
-    </aside>
-  `,
-  styles: [`
-    .sidebar {
-      width: 240px;
-      min-width: 240px;
-      background: #f5f5f5;
-      border-right: 1px solid #e0e0e0;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .sidebar__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem;
-      font-weight: 600;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #555;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .sidebar__count {
-      background: #1a1a2e;
-      color: white;
-      border-radius: 999px;
-      padding: 0.1rem 0.5rem;
-      font-size: 0.75rem;
-    }
-
-    .sidebar__group {
-      padding: 0.5rem 0;
-    }
-
-    .sidebar__group-label {
-      padding: 0.4rem 1rem;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #999;
-    }
-
-    .sidebar__item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      width: 100%;
-      padding: 0.6rem 1rem;
-      background: none;
-      border: none;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.15s;
-      font-size: 0.9rem;
-    }
-
-    .sidebar__item:hover {
-      background: #e8e8e8;
-    }
-
-    .sidebar__item--active {
-      background: #1a1a2e;
-      color: white;
-    }
-
-    .sidebar__item-name {
-      flex: 1;
-    }
-
-    .sidebar__item-version {
-      font-size: 0.7rem;
-      color: #aaa;
-    }
-
-    .sidebar__item--active .sidebar__item-version {
-      color: #ccc;
-    }
-
-    .sidebar__item-premium {
-      color: #f57f17;
-      font-size: 0.75rem;
-    }
-
-    .sidebar__loading,
-    .sidebar__empty,
-    .sidebar__error {
-      padding: 1rem;
-      color: #888;
-      font-size: 0.85rem;
-      text-align: center;
-    }
-
-    .sidebar__error button {
-      display: block;
-      margin: 0.5rem auto 0;
-      padding: 0.25rem 0.75rem;
-      cursor: pointer;
-    }
-  `]
+      </div>
+    </div>
+  `
 })
 export class SidebarComponent implements OnInit {
   @Output() toolSelected = new EventEmitter<Tool>();
 
   tools: Tool[] = [];
-  selectedTool: Tool | null = null;
   loading = false;
   error = false;
-
-  get builtInTools(): Tool[] {
-    return this.tools.filter(t => t.isBuiltIn);
-  }
-
-  get pluginTools(): Tool[] {
-    return this.tools.filter(t => !t.isBuiltIn);
-  }
 
   constructor(private pluginService: PluginService) {}
 
@@ -205,7 +82,6 @@ export class SidebarComponent implements OnInit {
   }
 
   selectTool(tool: Tool): void {
-    this.selectedTool = tool;
     this.toolSelected.emit(tool);
   }
 }
