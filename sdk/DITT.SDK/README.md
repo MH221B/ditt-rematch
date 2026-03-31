@@ -57,15 +57,6 @@ Example:
 
 ---
 
-## ToolResponse<T>
-
-Always wrap responses in ToolResponse<T>:
-
-return Results.Ok(ToolResponse<string>.Ok("result"));
-return Results.BadRequest(ToolResponse<string>.Fail("error message"));
-
----
-
 ## Design Tokens
 
 Use these CSS variables in your Angular component
