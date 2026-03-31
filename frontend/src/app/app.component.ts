@@ -3,11 +3,12 @@ import { NavbarComponent } from './components/shell/navbar/navbar.component';
 import { SidebarComponent } from './components/shell/sidebar/sidebar.component';
 import { PluginViewportComponent } from './components/plugin-viewport/plugin-viewport.component';
 import { Tool } from './models/tool.model';
+import { FooterComponent } from "./components/shell/footer/footer.component";
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [NavbarComponent, SidebarComponent, PluginViewportComponent],
+  imports: [NavbarComponent, SidebarComponent, PluginViewportComponent, FooterComponent],
   template: `
     <div class="app-shell">
       <app-navbar />
@@ -17,6 +18,7 @@ import { Tool } from './models/tool.model';
           <app-plugin-viewport [selectedTool]="selectedTool" />
         </main>
       </div>
+      <app-footer />
     </div>
   `,
   styles: [`
