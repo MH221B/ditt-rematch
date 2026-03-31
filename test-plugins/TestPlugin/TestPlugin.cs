@@ -1,37 +1,32 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using DITT.SDK;
+﻿using DITT.SDK;
+using Microsoft.AspNetCore.Http;
 
-namespace ToolTemplate;
+namespace TestPlugin;
 
-/// <summary>
-/// Entry point for the ToolTemplate plugin.
-/// DITT discovers this class automatically on load.
-/// </summary>
-public class ToolTemplatePlugin : ToolPluginBase
+public class TestPlugin : ToolPluginBase
 {
-    public override string Name        => "ToolTemplate";
-    public override string Version     => "TOOL_VERSION";
-    public override string Description => "TOOL_DESCRIPTION";
-    public override bool   IsPremium   => false; // Set to true for premium tools
+    public override string Name => "TestPlugin";
+    public override string Version => "1.0.0";
+    public override string Description => "A simple test plugin.";
 
-    /// <summary>
-    /// Register services your tool needs.
-    /// They will be available via DI in your endpoint handlers.
-    /// </summary>
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddScoped<ToolTemplateService>();
-    }
-
-    /// <summary>
-    /// Handle all incoming requests for this plugin.
-    /// Convention: /api/tools/ToolTemplate/{action}
-    /// </summary>
     protected override async Task HandleRequest(HttpContext context, string path)
     {
         switch (path)
         {
+            case "hello":
+                if (!HttpMethods.IsGet(context.Request.Method))
+                {
+                    context.Response.StatusCode = 405;
+                    await context.Response.WriteAsJsonAsync(new { Message = "Method not allowed" });
+                    break;
+                }
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    Message = "Hello from TestPlugin!",
+                    Timestamp = DateTime.UtcNow
+                });
+                break;
+
             case "info":
                 if (!HttpMethods.IsGet(context.Request.Method))
                 {
@@ -39,27 +34,12 @@ public class ToolTemplatePlugin : ToolPluginBase
                     await context.Response.WriteAsJsonAsync(new { Message = "Method not allowed" });
                     break;
                 }
-                await context.Response.WriteAsJsonAsync(
-                    ToolResponse<object>.Ok(new { Name, Version, Description }));
-                break;
-
-            case "run":
-                if (!HttpMethods.IsPost(context.Request.Method))
+                await context.Response.WriteAsJsonAsync(new
                 {
-                    context.Response.StatusCode = 405;
-                    await context.Response.WriteAsJsonAsync(new { Message = "Method not allowed" });
-                    break;
-                }
-                var input = await context.Request.ReadFromJsonAsync<ToolTemplateRequest>();
-                if (input is null || string.IsNullOrWhiteSpace(input.Value))
-                {
-                    context.Response.StatusCode = 400;
-                    await context.Response.WriteAsJsonAsync(
-                        ToolResponse<string>.Fail("Input value is required"));
-                    break;
-                }
-                var result = new ToolTemplateService().Process(input.Value);
-                await context.Response.WriteAsJsonAsync(ToolResponse<string>.Ok(result));
+                    Name,
+                    Version,
+                    Description
+                });
                 break;
 
             default:
@@ -72,6 +52,3 @@ public class ToolTemplatePlugin : ToolPluginBase
         }
     }
 }
-
-/// <summary>Request model for the run endpoint.</summary>
-public record ToolTemplateRequest(string Value);
