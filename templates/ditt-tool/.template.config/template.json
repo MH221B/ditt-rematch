@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json.schemastore.org/template",
+  "author": "DITT",
+  "classifications": ["DITT", "Plugin", "Tool"],
+  "identity": "DITT.ToolTemplate",
+  "name": "DITT Tool Plugin",
+  "shortName": "ditt-tool",
+  "description": "Scaffolds a new DITT tool plugin project",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "ToolTemplate",
+  "preferNameDirectory": true,
+  "symbols": {
+    "ToolName": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "MyTool",
+      "replaces": "ToolTemplate",
+      "description": "The name of your tool"
+    },
+    "Description": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "A DITT tool plugin",
+      "replaces": "TOOL_DESCRIPTION",
+      "description": "Short description of your tool"
+    },
+    "Version": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "1.0.0",
+      "replaces": "TOOL_VERSION",
+      "description": "Initial version of your tool"
+    },
+    "IsPremium": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Whether this tool requires premium"
+    }
+  }
+}

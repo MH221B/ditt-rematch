@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ToolTemplate</AssemblyName>
+    <RootNamespace>ToolTemplate</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference the DITT SDK -->
+    <!-- Option A: Local NuGet (dev) -->
+    <PackageReference Include="DITT.SDK" Version="1.0.0" />
+    <!-- Option B: NuGet.org (when published) -->
+    <!-- dotnet add package DITT.SDK -->
+  </ItemGroup>
+</Project>
