@@ -1,6 +1,5 @@
 // templates/ditt-tool/ToolPlugin.cs
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using DITT.SDK;
 
 namespace ToolTemplate;
@@ -14,21 +13,8 @@ public class ToolTemplatePlugin : ToolPluginBase
     public override string Name        => "ToolTemplate";
     public override string Version     => "TOOL_VERSION";
     public override string Description => "TOOL_DESCRIPTION";
-    public override bool   IsPremium   => false; // Set to true for premium tools
+    public override bool   IsPremium   => false;
 
-    /// <summary>
-    /// Register services your tool needs.
-    /// They will be available via DI in your endpoint handlers.
-    /// </summary>
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddScoped<ToolTemplateService>();
-    }
-
-    /// <summary>
-    /// Handle all incoming requests for this plugin.
-    /// Convention: /api/tools/ToolTemplate/{action}
-    /// </summary>
     protected override async Task HandleRequest(HttpContext context, string path)
     {
         switch (path)
@@ -40,8 +26,12 @@ public class ToolTemplatePlugin : ToolPluginBase
                     await context.Response.WriteAsJsonAsync(new { Message = "Method not allowed" });
                     break;
                 }
-                await context.Response.WriteAsJsonAsync(
-                    ToolResponse<object>.Ok(new { Name, Version, Description }));
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    Name,
+                    Version,
+                    Description
+                });
                 break;
 
             case "run":
@@ -51,26 +41,38 @@ public class ToolTemplatePlugin : ToolPluginBase
                     await context.Response.WriteAsJsonAsync(new { Message = "Method not allowed" });
                     break;
                 }
-                var input = await context.Request.ReadFromJsonAsync<ToolTemplateRequest>();
-                if (input is null || string.IsNullOrWhiteSpace(input.Value))
-                {
-                    context.Response.StatusCode = 400;
-                    await context.Response.WriteAsJsonAsync(
-                        ToolResponse<string>.Fail("Input value is required"));
-                    break;
-                }
-                var result = new ToolTemplateService().Process(input.Value);
-                await context.Response.WriteAsJsonAsync(ToolResponse<string>.Ok(result));
+                await HandleRun(context);
                 break;
 
             default:
                 context.Response.StatusCode = 404;
                 await context.Response.WriteAsJsonAsync(new
                 {
-                    Message = $"Route '{path}' not found in {Name}"
+                    Message = $"Route '{path}' not found in {Name}. Available routes: /info, /run"
                 });
                 break;
         }
+    }
+
+    private async Task HandleRun(HttpContext context)
+    {
+        // TODO: Replace with your tool logic
+        var input = await context.Request.ReadFromJsonAsync<ToolTemplateRequest>();
+
+        if (input is null || string.IsNullOrWhiteSpace(input.Value))
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                Message = "Input value is required"
+            });
+            return;
+        }
+
+        await context.Response.WriteAsJsonAsync(new
+        {
+            Result = $"ToolTemplate processed: {input.Value}"
+        });
     }
 }
 

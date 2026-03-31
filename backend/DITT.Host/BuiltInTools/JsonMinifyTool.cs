@@ -15,10 +15,22 @@ public class JsonMinifyTool : ToolPluginBase
         switch (path)
         {
             case "minify":
+                if (!HttpMethods.IsPost(context.Request.Method))
+                {
+                    context.Response.StatusCode = 405;
+                    await context.Response.WriteAsJsonAsync(new { Message = "Method not allowed" });
+                    break;
+                }
                 await HandleMinify(context);
                 break;
 
             case "info":
+                if (!HttpMethods.IsGet(context.Request.Method))
+                {
+                    context.Response.StatusCode = 405;
+                    await context.Response.WriteAsJsonAsync(new { Message = "Method not allowed" });
+                    break;
+                }
                 await context.Response.WriteAsJsonAsync(new
                 {
                     Name,
@@ -40,20 +52,8 @@ public class JsonMinifyTool : ToolPluginBase
 
     private async Task HandleMinify(HttpContext context)
     {
-        // Only POST is supported
-        if (context.Request.Method != "POST")
-        {
-            context.Response.StatusCode = 405;
-            await context.Response.WriteAsJsonAsync(new
-            {
-                Message = "Only POST method is supported for minify operation"
-            });
-            return;
-        }
-
         try
         {
-            // Read JSON from request body
             using var reader = new StreamReader(context.Request.Body);
             var jsonInput = await reader.ReadToEndAsync();
 
@@ -67,10 +67,7 @@ public class JsonMinifyTool : ToolPluginBase
                 return;
             }
 
-            // Parse JSON to validate and minify
             using var document = JsonDocument.Parse(jsonInput);
-            
-            // Re-serialize without formatting to minify
             var minified = JsonSerializer.Serialize(
                 document.RootElement,
                 new JsonSerializerOptions { WriteIndented = false }
