@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
-  selector: 'tool-ToolTemplate',
+  selector: 'tool-template',
   standalone: true,
   imports: [CommonModule, FormsModule],
   encapsulation: ViewEncapsulation.ShadowDom, // Style isolation
