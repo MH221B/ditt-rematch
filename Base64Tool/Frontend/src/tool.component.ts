@@ -7,128 +7,151 @@ import { HttpClient } from '@angular/common/http';
   selector: 'tool-template',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  encapsulation: ViewEncapsulation.ShadowDom, // Style isolation
   template: `
-    <div class="tool-container">
+    <div class="tool-container d-flex flex-column h-100 p-4">
 
-      <div class="tool-header">
-        <h2 class="tool-title">Base64 string encoder/decoder</h2>
-        <p class="tool-description">Simply encode and decode strings into their base64 representation.</p>
+      <!-- Header -->
+      <div class="tool-header border-bottom border-secondary pb-3 mb-4">
+        <h2 class="tool-title fs-2 fw-bold mb-2">Base64 string encoder/decoder</h2>
+        <p class="tool-description text-muted mb-0">Simply encode and decode strings into their base64 representation.</p>
       </div>
 
-      <div class="tool-body-wrapper">
+      <!-- Content Grid -->
+      <div class="row g-3 flex-grow-1 overflow-auto">
 
         <!-- ENCODE SECTION -->
-        <div class="encode-section">
-          <div class="section-header">
-            <h3 class="section-title">String to base64</h3>
-          </div>
+        <div class="col-lg-6 col-12">
+          <div class="card card-section h-100">
+            <div class="card-header border-secondary">
+              <h3 class="card-title text-secondary fw-semibold mb-0">String to base64</h3>
+            </div>
+            <div class="card-body d-flex flex-column gap-3">
 
-          <!-- URL-Safe Toggle -->
-          <div class="toggle-section">
-            <label class="checkbox-toggle-label">
-              <input type="checkbox" [(ngModel)]="encodeUrlSafe" class="toggle-checkbox" />
-              <span class="toggle-text">Encode URL safe</span>
-            </label>
-          </div>
+              <!-- URL-Safe Toggle -->
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  id="encodeUrlSafe"
+                  [(ngModel)]="encodeUrlSafe" />
+                <label class="form-check-label" for="encodeUrlSafe">
+                  Encode URL safe
+                </label>
+              </div>
 
-          <!-- Input Area -->
-          <div class="tool-input-group">
-            <label class="tool-label">String to encode</label>
-            <textarea
-              class="tool-textarea"
-              [(ngModel)]="encodeInput"
-              placeholder="Put your string here..."
-              rows="6">
-            </textarea>
-          </div>
+              <!-- Input Area -->
+              <div>
+                <label for="encodeInput" class="form-label text-uppercase small fw-semibold">String to encode</label>
+                <textarea
+                  id="encodeInput"
+                  class="form-control form-control-input"
+                  [(ngModel)]="encodeInput"
+                  placeholder="Put your string here..."
+                  rows="5">
+                </textarea>
+              </div>
 
-          <!-- Result Area -->
-          <div class="tool-result-group">
-            <label class="tool-label">Base64 of string</label>
-            <pre class="tool-result-content">{{ encodeResult || 'The base64 encoding of your string will be here' }}</pre>
-          </div>
+              <!-- Result Area -->
+              <div class="flex-grow-1 d-flex flex-column">
+                <label for="encodeResult" class="form-label text-uppercase small fw-semibold">Base64 of string</label>
+                <pre id="encodeResult" class="result-content flex-grow-1 mb-0">{{ encodeResult || 'The base64 encoding of your string will be here' }}</pre>
+              </div>
 
-          <!-- Error -->
-          @if (encodeError) {
-            <div class="alert alert-danger">{{ encodeError }}</div>
-          }
-
-          <!-- Action Buttons -->
-          <div class="section-actions">
-            <button
-              class="btn btn-secondary"
-              (click)="encode()"
-              [disabled]="encodeLoading">
-              @if (encodeLoading) {
-                <span class="spinner-border spinner-border-sm me-2"></span>
+              <!-- Error -->
+              @if (encodeError) {
+                <div class="alert alert-danger mb-0" role="alert">{{ encodeError }}</div>
               }
-              Encode
-            </button>
-            @if (encodeResult) {
-              <button
-                class="btn btn-outline-light"
-                (click)="copyToClipboard(encodeResult, 'base64')">
-                Copy base64
-              </button>
-            }
+
+              <!-- Action Buttons -->
+              <div class="d-flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="encode()"
+                  [disabled]="encodeLoading">
+                  @if (encodeLoading) {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  }
+                  Encode
+                </button>
+                @if (encodeResult) {
+                  <button
+                    type="button"
+                    class="btn btn-outline-light"
+                    (click)="copyToClipboard(encodeResult, 'base64')">
+                    Copy base64
+                  </button>
+                }
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- DECODE SECTION -->
-        <div class="decode-section">
-          <div class="section-header">
-            <h3 class="section-title">Base64 to string</h3>
-          </div>
+        <div class="col-lg-6 col-12">
+          <div class="card card-section h-100">
+            <div class="card-header border-secondary">
+              <h3 class="card-title text-secondary fw-semibold mb-0">Base64 to string</h3>
+            </div>
+            <div class="card-body d-flex flex-column gap-3">
 
-          <!-- URL-Safe Toggle -->
-          <div class="toggle-section">
-            <label class="checkbox-toggle-label">
-              <input type="checkbox" [(ngModel)]="decodeUrlSafe" class="toggle-checkbox" />
-              <span class="toggle-text">Decode URL safe</span>
-            </label>
-          </div>
+              <!-- URL-Safe Toggle -->
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  id="decodeUrlSafe"
+                  [(ngModel)]="decodeUrlSafe" />
+                <label class="form-check-label" for="decodeUrlSafe">
+                  Decode URL safe
+                </label>
+              </div>
 
-          <!-- Input Area -->
-          <div class="tool-input-group">
-            <label class="tool-label">Base64 string to decode</label>
-            <textarea
-              class="tool-textarea"
-              [(ngModel)]="decodeInput"
-              placeholder="Your base64 string..."
-              rows="6">
-            </textarea>
-          </div>
+              <!-- Input Area -->
+              <div>
+                <label for="decodeInput" class="form-label text-uppercase small fw-semibold">Base64 string to decode</label>
+                <textarea
+                  id="decodeInput"
+                  class="form-control form-control-input"
+                  [(ngModel)]="decodeInput"
+                  placeholder="Your base64 string..."
+                  rows="5">
+                </textarea>
+              </div>
 
-          <!-- Result Area -->
-          <div class="tool-result-group">
-            <label class="tool-label">Decoded string</label>
-            <pre class="tool-result-content">{{ decodeResult || 'The decoded string will be here' }}</pre>
-          </div>
+              <!-- Result Area -->
+              <div class="flex-grow-1 d-flex flex-column">
+                <label for="decodeResult" class="form-label text-uppercase small fw-semibold">Decoded string</label>
+                <pre id="decodeResult" class="result-content flex-grow-1 mb-0">{{ decodeResult || 'The decoded string will be here' }}</pre>
+              </div>
 
-          <!-- Error -->
-          @if (decodeError) {
-            <div class="alert alert-danger">{{ decodeError }}</div>
-          }
-
-          <!-- Action Buttons -->
-          <div class="section-actions">
-            <button
-              class="btn btn-secondary"
-              (click)="decode()"
-              [disabled]="decodeLoading">
-              @if (decodeLoading) {
-                <span class="spinner-border spinner-border-sm me-2"></span>
+              <!-- Error -->
+              @if (decodeError) {
+                <div class="alert alert-danger mb-0" role="alert">{{ decodeError }}</div>
               }
-              Decode
-            </button>
-            @if (decodeResult) {
-              <button
-                class="btn btn-outline-light"
-                (click)="copyToClipboard(decodeResult, 'decoded')">
-                Copy decoded string
-              </button>
-            }
+
+              <!-- Action Buttons -->
+              <div class="d-flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="decode()"
+                  [disabled]="decodeLoading">
+                  @if (decodeLoading) {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  }
+                  Decode
+                </button>
+                @if (decodeResult) {
+                  <button
+                    type="button"
+                    class="btn btn-outline-light"
+                    (click)="copyToClipboard(decodeResult, 'decoded')">
+                    Copy decoded string
+                  </button>
+                }
+              </div>
+            </div>
           </div>
         </div>
 
@@ -137,233 +160,138 @@ import { HttpClient } from '@angular/common/http';
     </div>
   `,
   styles: [`
-    /* These match the host CSS variables. */
-    /* Do NOT hardcode colors — use these tokens. */
     :host {
-      --primary-color:     #088395;
-      --secondary-color:   #37B7C3;
-      --background-color:  #071952;
-      --secondary-color-1: #0A2463;
-      --secondary-color-2: #2A9DAF;
-      --text-color:        #EBF4F6;
-      --hover-color:       var(--secondary-color-2);
+      --bs-primary-color:        #088395;
+      --bs-secondary-color:      #37B7C3;
+      --bs-background-color:     #071952;
+      --bs-dark-bg:              #0A2463;
+      --bs-border-color:         #2A9DAF;
+      --bs-text-color:           #EBF4F6;
+      --bs-body-bg: var(--bs-background-color);
+      --bs-body-color: var(--bs-text-color);
       display: block;
       height: 100%;
     }
 
-    .tool-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      padding: 1.5rem;
-      background-color: var(--background-color);
-      color: var(--text-color);
+    /* Override Bootstrap color schema */
+    .btn-primary {
+      --bs-btn-bg: var(--bs-primary-color);
+      --bs-btn-border-color: var(--bs-primary-color);
+      --bs-btn-hover-bg: var(--bs-secondary-color);
+      --bs-btn-hover-border-color: var(--bs-secondary-color);
     }
 
-    .tool-header {
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid var(--secondary-color-1);
-      padding-bottom: 1rem;
-    }
-
-    .tool-title {
-      color: var(--secondary-color-2);
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-      font-size: 1.75rem;
-    }
-
-    .tool-description {
-      color: var(--text-color);
-      opacity: 0.8;
-      font-size: 0.9rem;
-      margin: 0;
-    }
-
-    .tool-body-wrapper {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 1rem;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 1024px) {
-      .tool-body-wrapper {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .encode-section,
-    .decode-section {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      padding: 1rem;
-      border: 1px solid var(--secondary-color-1);
-      border-radius: 8px;
-      background-color: rgba(10, 36, 99, 0.3);
-    }
-
-    .section-header {
-      border-bottom: 1px solid var(--secondary-color-2);
-      padding-bottom: 0.75rem;
-    }
-
-    .section-title {
-      color: var(--secondary-color);
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin: 0;
-    }
-
-    .toggle-section {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .checkbox-toggle-label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .toggle-checkbox {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-      accent-color: var(--primary-color);
-    }
-
-    .toggle-text {
-      color: var(--text-color);
-      font-size: 0.9rem;
-    }
-
-    .tool-label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 0.4rem;
-      color: var(--secondary-color-2);
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .tool-input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    .tool-result-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      flex: 1;
-    }
-
-    .tool-textarea {
-      width: 100%;
-      background-color: var(--secondary-color-1);
-      border: 1px solid var(--secondary-color-2);
-      color: var(--text-color);
-      border-radius: 6px;
-      padding: 0.75rem;
-      font-family: "Courier New", monospace;
-      font-size: 0.9rem;
-      resize: vertical;
-      min-height: 120px;
-    }
-
-    .tool-textarea:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(8, 131, 149, 0.3);
-    }
-
-    .tool-textarea::placeholder {
-      color: var(--text-color);
-      opacity: 0.4;
-    }
-
-    .tool-result-content {
-      background-color: var(--secondary-color-1);
-      border: 1px solid var(--secondary-color-2);
-      border-radius: 6px;
-      padding: 1rem;
-      color: var(--text-color);
-      font-family: "Courier New", monospace;
-      font-size: 0.85rem;
-      white-space: pre-wrap;
-      word-break: break-all;
-      margin: 0;
-      min-height: 100px;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-
-    .section-actions {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      cursor: pointer;
-      border: none;
-      border-radius: 4px;
-      padding: 0.5rem 1.25rem;
-      font-size: 0.9rem;
-      transition: all 0.2s ease;
+    .btn-outline-light {
+      --bs-btn-color: var(--bs-text-color);
+      --bs-btn-border-color: var(--bs-text-color);
+      --bs-btn-hover-color: var(--bs-text-color);
+      --bs-btn-hover-bg: rgba(255, 255, 255, 0.1);
+      --bs-btn-hover-border-color: var(--bs-secondary-color);
     }
 
     .btn:disabled {
       opacity: 0.5;
-      cursor: not-allowed;
     }
 
-    .btn-secondary {
-      background-color: var(--primary-color);
-      color: var(--text-color);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background-color: var(--secondary-color);
-    }
-
-    .btn-outline-light {
-      background: transparent;
-      border: 1px solid var(--text-color);
-      color: var(--text-color);
-    }
-
-    .btn-outline-light:hover:not(:disabled) {
-      background-color: rgba(255, 255, 255, 0.1);
-      border-color: var(--secondary-color);
-    }
-
-    .alert-danger {
-      background-color: rgba(220, 53, 69, 0.2);
-      border: 1px solid rgba(220, 53, 69, 0.5);
-      color: #ff6b6b;
-      padding: 0.75rem;
-      border-radius: 4px;
+    .form-control,
+    .form-control-input {
+      --bs-form-control-bg: var(--bs-dark-bg);
+      --bs-form-control-color: var(--bs-text-color);
+      --bs-form-control-border-color: var(--bs-border-color);
+      --bs-form-control-placeholder-color: rgba(235, 244, 246, 0.4);
+      font-family: "Courier New", monospace;
       font-size: 0.9rem;
     }
 
-    .global-actions {
+    .form-control:focus,
+    .form-control-input:focus {
+      --bs-form-control-border-color: var(--bs-primary-color);
+      color: var(--bs-text-color);
+      background-color: var(--bs-dark-bg);
+      box-shadow: 0 0 0 0.25rem rgba(8, 131, 149, 0.25);
+    }
+
+    .form-label {
+      color: var(--bs-border-color);
+      font-weight: 600;
+    }
+
+    .form-check-label {
+      color: var(--bs-text-color);
+      cursor: pointer;
+    }
+
+    .form-check-input {
+      border-color: var(--bs-border-color);
+      accent-color: var(--bs-primary-color);
+    }
+
+    .form-check-input:checked {
+      background-color: var(--bs-primary-color);
+      border-color: var(--bs-primary-color);
+    }
+
+    .card {
+      --bs-card-bg: rgba(10, 36, 99, 0.3);
+      --bs-card-border-color: var(--bs-dark-bg);
+      border: 1px solid var(--bs-dark-bg);
+    }
+
+    .card-header {
+      --bs-card-header-bg: transparent;
+      --bs-card-header-border-color: var(--bs-border-color);
+      border-bottom: 1px solid var(--bs-border-color);
+    }
+
+    .card-title {
+      color: var(--bs-secondary-color);
+      margin: 0;
+    }
+
+    .result-content {
+      background-color: var(--bs-dark-bg);
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.375rem;
+      padding: 1rem;
+      color: var(--bs-text-color);
+      font-family: "Courier New", monospace;
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .alert-danger {
+      --bs-alert-bg: rgba(220, 53, 69, 0.15);
+      --bs-alert-border-color: rgba(220, 53, 69, 0.3);
+      --bs-alert-color: #ff6b6b;
+    }
+
+    .tool-header {
+      border-color: var(--bs-dark-bg);
+    }
+
+    .tool-title {
+      color: var(--bs-border-color);
+    }
+
+    .tool-description {
+      color: var(--bs-text-color);
+      opacity: 0.8;
+    }
+
+    .tool-container {
+      background-color: var(--bs-background-color);
+      color: var(--bs-text-color);
+    }
+
+    .card-section {
       display: flex;
-      gap: 0.75rem;
-      margin-top: 1rem;
+      flex-direction: column;
     }
 
     .spinner-border {
-      display: inline-block;
       animation: spin 0.75s linear infinite;
     }
 
