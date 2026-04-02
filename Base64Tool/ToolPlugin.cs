@@ -1,11 +1,12 @@
 // templates/ditt-tool/ToolPlugin.cs
+using System;
 using Microsoft.AspNetCore.Http;
 using DITT.SDK;
 
-namespace MyTool;
+namespace Base64Tool;
 
 /// <summary>
-/// Entry point for the MyTool plugin.
+/// Entry point for the Base64Tool plugin.
 /// DITT discovers this class automatically on load.
 /// </summary>
 public class Base64ToolPlugin : ToolPluginBase
@@ -34,47 +35,136 @@ public class Base64ToolPlugin : ToolPluginBase
                 });
                 break;
 
-            case "run":
+            case "encode":
                 if (!HttpMethods.IsPost(context.Request.Method))
                 {
                     context.Response.StatusCode = 405;
-                    await context.Response.WriteAsJsonAsync(new { Message = "Method not allowed" });
+                    await context.Response.WriteAsJsonAsync(new { success = false, error = "Method not allowed" });
                     break;
                 }
-                await HandleRun(context);
+                await HandleEncode(context);
+                break;
+
+            case "decode":
+                if (!HttpMethods.IsPost(context.Request.Method))
+                {
+                    context.Response.StatusCode = 405;
+                    await context.Response.WriteAsJsonAsync(new { success = false, error = "Method not allowed" });
+                    break;
+                }
+                await HandleDecode(context);
                 break;
 
             default:
                 context.Response.StatusCode = 404;
                 await context.Response.WriteAsJsonAsync(new
                 {
-                    Message = $"Route '{path}' not found in {Name}. Available routes: /info, /run"
+                    Message = $"Route '{path}' not found in {Name}. Available routes: /info, /encode, /decode"
                 });
                 break;
         }
     }
 
-    private async Task HandleRun(HttpContext context)
+    private async Task HandleEncode(HttpContext context)
     {
-        // TODO: Replace with your tool logic
-        var input = await context.Request.ReadFromJsonAsync<MyToolRequest>();
+        var input = await context.Request.ReadFromJsonAsync<Base64Request>();
 
         if (input is null || string.IsNullOrWhiteSpace(input.Value))
         {
             context.Response.StatusCode = 400;
             await context.Response.WriteAsJsonAsync(new
             {
-                Message = "Input value is required"
+                success = false,
+                error = "Input value is required"
             });
             return;
         }
 
-        await context.Response.WriteAsJsonAsync(new
+        try
         {
-            Result = $"MyTool processed: {input.Value}"
-        });
+            var bytes = System.Text.Encoding.UTF8.GetBytes(input.Value);
+            var encoded = Convert.ToBase64String(bytes);
+
+            // Apply URL-safe conversion if requested
+            if (input.UrlSafe)
+            {
+                encoded = encoded.Replace("+", "-").Replace("/", "_").TrimEnd('=');
+            }
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = true,
+                data = encoded
+            });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = $"Encoding error: {ex.Message}"
+            });
+        }
+    }
+
+    private async Task HandleDecode(HttpContext context)
+    {
+        var input = await context.Request.ReadFromJsonAsync<Base64Request>();
+
+        if (input is null || string.IsNullOrWhiteSpace(input.Value))
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = "Input value is required"
+            });
+            return;
+        }
+
+        try
+        {
+            var base64String = input.Value;
+
+            // Reverse URL-safe conversion if requested
+            if (input.UrlSafe)
+            {
+                base64String = base64String.Replace("-", "+").Replace("_", "/");
+                // Re-add padding if necessary
+                var padding = (4 - (base64String.Length % 4)) % 4;
+                base64String = base64String.PadRight(base64String.Length + padding, '=');
+            }
+
+            var bytes = Convert.FromBase64String(base64String);
+            var decoded = System.Text.Encoding.UTF8.GetString(bytes);
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = true,
+                data = decoded
+            });
+        }
+        catch (FormatException)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = "Invalid Base64 input"
+            });
+        }
+        catch (Exception ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = $"Decoding error: {ex.Message}"
+            });
+        }
     }
 }
 
-/// <summary>Request model for the run endpoint.</summary>
-public record MyToolRequest(string Value);
+/// <summary>Request model for encode/decode endpoints.</summary>
+public record Base64Request(string Value, bool UrlSafe);

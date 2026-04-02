@@ -1,5 +1,5 @@
 using DITT.SDK.MockHost;
-using MyTool;
+using Base64Tool;
 
 // ─────────────────────────────────────────────────────
 // DITT Mock Host
@@ -11,5 +11,5 @@ using MyTool;
 //   dotnet run         → single run
 // ─────────────────────────────────────────────────────
 
-var app = MockHostBuilder.Create<MyToolPlugin>(args);
+var app = MockHostBuilder.Create<Base64ToolPlugin>(args);
 app.Run("http://localhost:5000");
