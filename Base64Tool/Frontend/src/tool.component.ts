@@ -23,7 +23,7 @@ import { HttpClient } from '@angular/common/http';
         <div class="col-lg-6 col-12">
           <div class="card card-section h-100">
             <div class="card-header border-secondary">
-              <h3 class="card-title text-secondary fw-semibold mb-0">String to base64</h3>
+              <h3 class="card-title fw-semibold mb-0">String to base64</h3>
             </div>
             <div class="card-body d-flex flex-column gap-3">
 
@@ -91,7 +91,7 @@ import { HttpClient } from '@angular/common/http';
         <div class="col-lg-6 col-12">
           <div class="card card-section h-100">
             <div class="card-header border-secondary">
-              <h3 class="card-title text-secondary fw-semibold mb-0">Base64 to string</h3>
+              <h3 class="card-title fw-semibold mb-0">Base64 to string</h3>
             </div>
             <div class="card-body d-flex flex-column gap-3">
 
@@ -171,6 +171,10 @@ import { HttpClient } from '@angular/common/http';
       --bs-body-color: var(--bs-text-color);
       display: block;
       height: 100%;
+    }
+
+    textarea {
+      resize: none;
     }
 
     /* Override Bootstrap color schema */
