@@ -14,5 +14,5 @@ import { Base64ToolComponent } from './tool.component';
   });
 
   // Register with the browser as a custom HTML element
-  customElements.define('ditt-plugin-Base64Tool', toolElement);
+  customElements.define('ditt-plugin-base64tool', toolElement);
 })();

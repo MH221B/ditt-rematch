@@ -13,6 +13,20 @@
   "sourceName": "ToolTemplate",
   "preferNameDirectory": true,
   "symbols": {
+    "ToolName": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "MyTool",
+      "replaces": "ToolTemplate",
+      "description": "The name of your tool"
+    },
+    "ToolNameLower": {
+      "type": "derived",
+      "valueSource": "ToolName",
+      "valueTransform": "lower",
+      "replaces": "tooltemplate",
+      "description": "Lowercase version of tool name for Web Component selector"
+    },
     "Description": {
       "type": "parameter",
       "datatype": "string",

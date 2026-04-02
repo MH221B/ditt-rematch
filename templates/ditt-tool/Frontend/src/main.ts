@@ -13,6 +13,6 @@ import { ToolTemplateComponent } from './tool.component';
     injector: app.injector
   });
 
-  // Register with the browser as a custom HTML element
-  customElements.define('ditt-plugin-ToolTemplate', toolElement);
+  // tooltemplate gets replaced with lowercase plugin name automatically
+  customElements.define('ditt-plugin-tooltemplate', toolElement);
 })();

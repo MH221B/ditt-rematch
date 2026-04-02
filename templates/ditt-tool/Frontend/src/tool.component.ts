@@ -66,8 +66,8 @@ import { HttpClient } from '@angular/common/http';
     </div>
   `,
   styles: [`
-    // These match the host app's CSS variables.
-    // Do NOT hardcode colors — use these tokens.
+    /* These match the host CSS variables. */
+    /* Do NOT hardcode colors — use these tokens. */
     :host {
       --primary-color:     #088395;
       --secondary-color:   #37B7C3;

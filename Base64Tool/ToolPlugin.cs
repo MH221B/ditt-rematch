@@ -11,7 +11,7 @@ namespace Base64Tool;
 /// </summary>
 public class Base64ToolPlugin : ToolPluginBase
 {
-    public override string Name        => "Base64 string encoder/decoder";
+    public override string Name        => "Base64Tool";
     public override string Version     => "1.0.0";
     public override string Description => "Simply encode and decode strings into their base64 representation.";
     public override bool   IsPremium   => false;
