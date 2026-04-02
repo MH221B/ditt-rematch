@@ -7,7 +7,6 @@
     <RootNamespace>Base64Tool</RootNamespace>
     <RestoreSources>../nupkgs</RestoreSources>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="DITT.SDK" Version="1.0.0" />
   </ItemGroup>

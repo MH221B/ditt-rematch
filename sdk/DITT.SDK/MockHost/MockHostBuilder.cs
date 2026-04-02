@@ -16,14 +16,12 @@ public static class MockHostBuilder
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Allow Angular preview shell to call the API
         builder.Services.AddCors(options =>
             options.AddPolicy("Dev", policy =>
                 policy.AllowAnyOrigin()
                       .AllowAnyMethod()
                       .AllowAnyHeader()));
 
-        // Register plugin services
         var plugin = new TPlugin();
         plugin.ConfigureServices(builder.Services);
 
@@ -31,29 +29,41 @@ public static class MockHostBuilder
 
         app.UseCors("Dev");
 
-        // Map plugin endpoints under /api/tools/{PluginName}/{path}
+        // Get the plugin's request handler
         var handler = plugin.CreateRequestHandler();
 
-        app.Map($"/api/tools/{plugin.Name}/{{path}}", handler);
-        app.Map($"/api/tools/{plugin.Name}", handler);
+        // Catch-all route: /api/tools/{PluginName}/**
+        app.Use(async (context, next) =>
+        {
+            var path = context.Request.Path.Value ?? "";
+            var pluginPrefix = $"/api/tools/{plugin.Name}/";
 
-        // Info endpoint — always available
+            if (path.StartsWith(pluginPrefix))
+            {
+                // Extract the path after /api/tools/{PluginName}/
+                var remainingPath = path.Substring(pluginPrefix.Length);
+                context.Request.RouteValues["path"] = remainingPath;
+                
+                await handler(context);
+            }
+            else
+            {
+                await next();
+            }
+        });
+
+        // Info endpoint
         app.MapGet($"/api/mock/info", () => new
         {
             Plugin = plugin.Name,
             Version = plugin.Version,
-            Description = plugin.Description,
-            Endpoints = new[]
-            {
-                $"GET  /api/tools/{plugin.Name}/info",
-                $"POST /api/tools/{plugin.Name}/run"
-            }
+            Description = plugin.Description
         });
 
         var logger = app.Services.GetRequiredService<ILogger<WebApplication>>();
         logger.LogInformation("🚀 DITT Mock Host running for plugin: {Name} v{Version}",
             plugin.Name, plugin.Version);
-        logger.LogInformation("📋 API info: <http://localhost:5000/api/mock/info>");
+        logger.LogInformation("📋 API info: http://localhost:5000/api/mock/info");
 
         return app;
     }
