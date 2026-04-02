@@ -3,6 +3,7 @@ const concat = require('concat');
 
 (async function build() {
   const files = [
+    './dist/frontend/runtime.js',
     './dist/frontend/polyfills.js',
     './dist/frontend/main.js'
   ];
