@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DITT Plugin Preview — MyTool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #071952;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Mimics DITT navbar */
+    .mock-navbar {
+      background: rgba(0, 0, 0, 0.2);
+      color: #EBF4F6;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .mock-navbar-brand {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .mock-badge {
+      background: #088395;
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+    }
+
+    /* Mimics DITT content area */
+    .mock-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Mimics DITT sidebar */
+    .mock-sidebar {
+      width: 240px;
+      background: rgba(0, 0, 0, 0.2);
+      border-right: 1px solid rgba(255,255,255,0.1);
+      padding: 1rem;
+      color: #EBF4F6;
+    }
+
+    .mock-sidebar-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #aaa;
+      margin-bottom: 0.5rem;
+    }
+
+    .mock-sidebar-item {
+      background: #0A2463;
+      border: 1px solid #2A9DAF;
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      color: #EBF4F6;
+      font-size: 0.9rem;
+    }
+
+    /* Plugin renders here */
+    .mock-viewport {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    ditt-plugin-MyTool {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mock DITT Navbar -->
+  <div class="mock-navbar">
+    <span class="mock-navbar-brand">🔧 DITT</span>
+    <span class="mock-badge">Preview Mode</span>
+  </div>
+
+  <div class="mock-body">
+
+    <!-- Mock Sidebar -->
+    <div class="mock-sidebar">
+      <div class="mock-sidebar-label">Tools</div>
+      <div class="mock-sidebar-item">MyTool</div>
+    </div>
+
+    <!-- Plugin Viewport — Web Component renders here -->
+    <div class="mock-viewport">
+      <ditt-plugin-MyTool></ditt-plugin-MyTool>
+    </div>
+
+  </div>
+
+  <!-- Compiled Web Component bundle -->
+  <script src="./plugin-bundle.js"></script>
+
+</body>
+</html>

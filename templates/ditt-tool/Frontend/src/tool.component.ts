@@ -215,7 +215,7 @@ export class ToolTemplateComponent {
         { value: this.inputValue }
       )
       .subscribe({
-        next: (res) => {
+        next: (res: { success: boolean; data: string; error?: string }) => {
           if (res.success) this.result = res.data;
           else this.error = res.error ?? 'Unknown error';
           this.loading = false;

@@ -1,14 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>Base64Tool</AssemblyName>
-    <RootNamespace>Base64Tool</RootNamespace>
-    <RestoreSources>../nupkgs</RestoreSources>
+    <AssemblyName>MyTool</AssemblyName>
+    <RootNamespace>MyTool</RootNamespace>
+    <RestoreSources>../../nupkgs</RestoreSources>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Reference the DITT SDK -->
+    <!-- Option A: Local NuGet (dev) -->
     <PackageReference Include="DITT.SDK" Version="1.0.0" />
+    <!-- Option B: NuGet.org (when published) -->
+    <!-- dotnet add package DITT.SDK -->
   </ItemGroup>
 </Project>

@@ -1,18 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
-  selector: 'tool-MyTool',
+  selector: 'tool-template',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  encapsulation: ViewEncapsulation.ShadowDom, // Style isolation
   template: `
     <div class="tool-container">
 
       <div class="tool-header">
         <h2 class="tool-title">MyTool</h2>
-        <p class="tool-description">Encode and decode Base64 strings</p>
+        <p class="tool-description">Simply encode and decode strings into their base64 representation.</p>
       </div>
 
       <div class="tool-body">
@@ -141,6 +142,28 @@ import { HttpClient } from '@angular/common/http';
       display: flex;
       gap: 0.75rem;
     }
+    .btn-secondary {
+      background-color: var(--primary-color);
+      border: none;
+      color: var(--text-color);
+      padding: 0.5rem 1.25rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background-color: var(--secondary-color);
+    }
+    .btn-outline-light {
+      background: transparent;
+      border: 1px solid var(--text-color);
+      color: var(--text-color);
+      padding: 0.5rem 1.25rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-outline-light:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
     .tool-result {
       flex: 1;
     }
@@ -156,6 +179,13 @@ import { HttpClient } from '@angular/common/http';
       word-break: break-all;
       margin: 0;
       min-height: 100px;
+    }
+    .alert-danger {
+      background-color: rgba(220, 53, 69, 0.2);
+      border: 1px solid rgba(220, 53, 69, 0.5);
+      color: #ff6b6b;
+      padding: 0.75rem;
+      border-radius: 4px;
     }
   `]
 })
@@ -185,7 +215,7 @@ export class MyToolComponent {
         { value: this.inputValue }
       )
       .subscribe({
-        next: (res) => {
+        next: (res: { success: boolean; data: string; error?: string }) => {
           if (res.success) this.result = res.data;
           else this.error = res.error ?? 'Unknown error';
           this.loading = false;
