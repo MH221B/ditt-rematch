@@ -195,7 +195,7 @@ export class ToolTemplateComponent {
   loading    = false;
   error      = '';
 
-  private readonly apiBase = '/api/tools/ToolTemplate';
+  private readonly apiBase = 'http://localhost:5000/api/tools/ToolTemplate';
 
   constructor(private http: HttpClient) {}
 

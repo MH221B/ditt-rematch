@@ -134,15 +134,6 @@ import { HttpClient } from '@angular/common/http';
 
       </div>
 
-      <!-- Global Clear Button -->
-      <div class="global-actions">
-        <button
-          class="btn btn-outline-light"
-          (click)="clear()">
-          Clear All
-        </button>
-      </div>
-
     </div>
   `,
   styles: [`
@@ -396,7 +387,7 @@ export class Base64ToolComponent {
   decodeError = '';
   decodeUrlSafe = false;
 
-  private readonly apiBase = '/api/tools/Base64Tool';
+  private readonly apiBase = 'http://localhost:5000/api/tools/Base64Tool';
 
   constructor(private http: HttpClient) {}
 
@@ -468,17 +459,5 @@ export class Base64ToolComponent {
     }).catch(() => {
       alert(`Failed to copy ${type} to clipboard`);
     });
-  }
-
-  clear(): void {
-    this.encodeInput = '';
-    this.encodeResult = '';
-    this.encodeError = '';
-    this.encodeUrlSafe = false;
-
-    this.decodeInput = '';
-    this.decodeResult = '';
-    this.decodeError = '';
-    this.decodeUrlSafe = false;
   }
 }
