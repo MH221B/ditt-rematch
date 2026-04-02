@@ -3,8 +3,8 @@ const concat = require('concat');
 
 (async function build() {
   const files = [
-    './dist/frontend/browser/polyfills.js',
-    './dist/frontend/browser/main.js'
+    './dist/frontend/polyfills.js',
+    './dist/frontend/main.js'
   ];
 
   await fs.ensureDir('preview');

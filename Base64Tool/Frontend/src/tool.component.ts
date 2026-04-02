@@ -146,7 +146,7 @@ import { HttpClient } from '@angular/common/http';
     </div>
   `,
   styles: [`
-    // These match the host app's CSS variables.
+    // These match the host CSS variables.
     // Do NOT hardcode colors — use these tokens.
     :host {
       --primary-color:     #088395;
@@ -283,7 +283,7 @@ import { HttpClient } from '@angular/common/http';
       color: var(--text-color);
       border-radius: 6px;
       padding: 0.75rem;
-      font-family: 'Courier New', monospace;
+      font-family: "Courier New", monospace;
       font-size: 0.9rem;
       resize: vertical;
       min-height: 120px;
@@ -306,7 +306,7 @@ import { HttpClient } from '@angular/common/http';
       border-radius: 6px;
       padding: 1rem;
       color: var(--text-color);
-      font-family: 'Courier New', monospace;
+      font-family: "Courier New", monospace;
       font-size: 0.85rem;
       white-space: pre-wrap;
       word-break: break-all;
