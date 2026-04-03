@@ -9,30 +9,102 @@ namespace DITT.CLI.Commands;
 
 public static class PackCommand
 {
-    // public static Command Create()
-    // {
-    //     var command = new Command("pack", "Package a plugin into .mtpkg format");
+    public static Command Create()
+    {
+        var command = new Command("pack", "Package a plugin into .mtpkg format");
 
-    //     var outputOption = new Option<string?>(
-    //         "--output",
-    //         "Output directory for the .mtpkg file"
-    //     );
+        var outputOption = new Option<string?>(
+            "--output",
+            "Output directory for the .mtpkg file"
+        );
 
-    //     var authorOption = new Option<string?>(
-    //         "--author",
-    //         "Author Name (optional)"
-    //     );
+        var authorOption = new Option<string?>(
+            "--author",
+            "Author Name (optional)"
+        );
 
-    //     command.AddOption(outputOption);
-    //     command.AddOption(authorOption);
+        command.AddOption(outputOption);
+        command.AddOption(authorOption);
 
-    //     command.SetHandler(async (output, author) =>
-    //     {
-    //         await ExecutePack(output, author);
-    //     }, outputOption, authorOption);
+        command.SetHandler(async (output, author) =>
+        {
+            await ExecutePack(output, author);
+        }, outputOption, authorOption);
 
-    //     return command;
-    // }
+        return command;
+    }
+    private static async Task ExecutePack(string? outputDir, string? author)
+    {
+        var currentDir = Directory.GetCurrentDirectory();
+        Console.WriteLine($"Packing plugin from: {currentDir}");
+
+        //  Find .csproj file
+        var csprojFiles = Directory.GetFiles(currentDir, "*.csproj");
+        if (csprojFiles.Length == 0)
+        {
+            Console.WriteLine("No .csproj file found in the current directory");
+        }
+
+        var csprojPath = csprojFiles[0];
+        var projectName = Path.GetFileNameWithoutExtension(csprojPath);
+
+        // Build the project
+        Console.WriteLine("Building project...");
+        var buildResult = await RunDotnetCommand($"build {csprojPath} -c Release");
+        if (buildResult == 0)
+        {
+            Console.WriteLine("Build failed");
+            Environment.Exit(1);
+        }
+
+        // Find the plugin DLL
+        var binPath = Path.Combine(currentDir, "bin", "Release", "net9.0");
+        var dllPath = Path.Combine(binPath, $"{projectName}.dll");
+
+        if (!File.Exists(dllPath))
+        {
+            Console.WriteLine($"Plugin DLL not found: {dllPath}");
+            Environment.Exit(1);
+        }
+
+        // Load plugin to get metadata
+        Console.WriteLine("Reading plugin metadata...");
+        var (name, version, description, isPremium) = await GetPluginMetadata(dllPath);
+
+        // Check for frontend bundle
+        string? frontendBundle = null;
+        var frontendPath = Path.Combine(currentDir, "Frontend", "preview", "plugin-bundle.js");
+        if (File.Exists(frontendPath))
+        {
+            Console.WriteLine("Frontend bundle found");
+            frontendBundle = "frontend/plugin-bundle.js";
+        }
+
+        // Create manifest
+        var manifest = new PluginManifest
+        {
+            Name = name,
+            Version = version,
+            Description = description,
+            Author = author ?? string.Empty,
+            IsPremium = isPremium,
+            PluginDll = $"{projectName}.dll",
+            FrontendBundle = frontendBundle,
+            DllHash = CalculateSha256(dllPath),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Create .mtpkg file
+        outputDir ??= currentDir;
+        var packagePath = Path.Combine(outputDir, $"{projectName}.{version}.mtpkg");
+
+        Console.WriteLine($"Creating package: {packagePath}");
+        await CreatePackage(packagePath, manifest, dllPath, frontendPath);
+
+        Console.WriteLine($"Package created successfully: {Path.GetFileName(packagePath)}");
+        Console.WriteLine($"Size: {new FileInfo(packagePath).Length / 1024:N0} KB");
+    }
+
     private static async Task<int> RunDotnetCommand(string arguments)
     {
         var process = new Process
