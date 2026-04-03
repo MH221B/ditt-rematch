@@ -95,6 +95,42 @@ public class PackageService : IPackageService
         }
     }
 
+    public async Task<IEnumerable<PluginPackage>> GetPackagesAsync()
+    {
+        return await _db.PluginPackages
+            .Include(p => p.Tool) // Include related Tool if exists
+            .OrderByDescending(p => p.UploadedAt)
+            .ToListAsync();
+    }
+
+    public async Task<bool> DeletePackageAsync(Guid id)
+    {
+        var package = await _db.PluginPackages.FindAsync(id);
+        if (package == null) return false;
+
+        // Delete files
+        if (Directory.Exists(package.PackagePath))
+            Directory.Delete(package.PackagePath, true);
+
+        // Mark as deleted instead of removing (audit trail)
+        package.Status = PackageStatus.Deleted;
+        await _db.SaveChangesAsync();
+
+        return true;
+    }
+
+    // New method to link package to tool after installation
+    public async Task LinkToToolAsync(Guid packageId, Guid toolId)
+    {
+        var package = await _db.PluginPackages.FindAsync(packageId);
+        if (package != null)
+        {
+            package.ToolId = toolId;
+            package.Status = PackageStatus.Installed;
+            await _db.SaveChangesAsync();
+        }
+    }
+
     private async Task<(PluginManifest manifest, string extractPath)> ExtractPackageAsync(string packagePath)
     {
         var extractPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
