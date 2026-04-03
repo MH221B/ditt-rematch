@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -32,9 +33,26 @@ public static class PackCommand
 
     //     return command;
     // }
+    private static async Task<int> RunDotnetCommand(string arguments)
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            }
+        };
 
-    private static async Task<(string name, string version, string description, bool isPremium)>
-        GetPluginMetadata(string dllPath)
+        process.Start();
+        await process.WaitForExitAsync();
+        return process.ExitCode;
+    }
+
+    private static async Task<(string name, string version, string description, bool isPremium)> GetPluginMetadata(string dllPath)
     {
         // Load assembly and find IToolPlugin implementation
         var assembly = System.Reflection.Assembly.LoadFrom(dllPath);
