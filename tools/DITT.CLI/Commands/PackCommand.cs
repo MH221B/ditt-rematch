@@ -33,16 +33,20 @@ public static class PackCommand
 
         return command;
     }
+
     private static async Task ExecutePack(string? outputDir, string? author)
     {
         var currentDir = Directory.GetCurrentDirectory();
-        Console.WriteLine($"Packing plugin from: {currentDir}");
+        var pluginRoot = ResolvePluginRoot(currentDir);
+
+        Console.WriteLine($"Packing plugin from: {pluginRoot}");
 
         //  Find .csproj file
-        var csprojFiles = Directory.GetFiles(currentDir, "*.csproj");
+        var csprojFiles = Directory.GetFiles(pluginRoot, "*.csproj");
         if (csprojFiles.Length == 0)
         {
-            Console.WriteLine("No .csproj file found in the current directory");
+            Console.WriteLine($"No .csproj file found in: {pluginRoot}");
+            Environment.Exit(1);
         }
 
         var csprojPath = csprojFiles[0];
@@ -50,15 +54,15 @@ public static class PackCommand
 
         // Build the project
         Console.WriteLine("Building project...");
-        var buildResult = await RunDotnetCommand($"build {csprojPath} -c Release");
-        if (buildResult == 0)
+        var buildResult = await RunDotnetCommand($"build \"{csprojPath}\" -c Release");
+        if (buildResult != 0)
         {
             Console.WriteLine("Build failed");
             Environment.Exit(1);
         }
 
         // Find the plugin DLL
-        var binPath = Path.Combine(currentDir, "bin", "Release", "net9.0");
+        var binPath = Path.Combine(pluginRoot, "bin", "Release", "net9.0");
         var dllPath = Path.Combine(binPath, $"{projectName}.dll");
 
         if (!File.Exists(dllPath))
@@ -73,7 +77,7 @@ public static class PackCommand
 
         // Check for frontend bundle
         string? frontendBundle = null;
-        var frontendPath = Path.Combine(currentDir, "Frontend", "preview", "plugin-bundle.js");
+        var frontendPath = Path.Combine(pluginRoot, "Frontend", "preview", "plugin-bundle.js");
         if (File.Exists(frontendPath))
         {
             Console.WriteLine("Frontend bundle found");
@@ -95,7 +99,12 @@ public static class PackCommand
         };
 
         // Create .mtpkg file
-        outputDir ??= currentDir;
+        outputDir ??= pluginRoot;
+        if (!Path.IsPathRooted(outputDir))
+        {
+            outputDir = Path.GetFullPath(Path.Combine(pluginRoot, outputDir));
+        }
+
         var packagePath = Path.Combine(outputDir, $"{projectName}.{version}.mtpkg");
 
         Console.WriteLine($"Creating package: {packagePath}");
@@ -103,6 +112,18 @@ public static class PackCommand
 
         Console.WriteLine($"Package created successfully: {Path.GetFileName(packagePath)}");
         Console.WriteLine($"Size: {new FileInfo(packagePath).Length / 1024:N0} KB");
+    }
+
+    private static string ResolvePluginRoot(string currentDir)
+    {
+        var initCwd = Environment.GetEnvironmentVariable("INIT_CWD");
+
+        if (!string.IsNullOrWhiteSpace(initCwd) && Directory.Exists(initCwd))
+        {
+            return initCwd;
+        }
+
+        return currentDir;
     }
 
     private static async Task<int> RunDotnetCommand(string arguments)

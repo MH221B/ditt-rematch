@@ -1,0 +1,16 @@
+{
+  "name": "ditt-rematch",
+  "version": "1.0.0",
+  "description": "DITT - Developer IT Tools platform",
+  "scripts": {
+    "setup": "node ./scripts/setup-mtp.js",
+    "mtp": "node ./scripts/run-mtp.js",
+    "mtp:pack": "node ./scripts/run-mtp.js pack",
+    "mtp:info": "node ./scripts/run-mtp.js --help",
+    "backend:run": "dotnet run --project backend/DITT.Host",
+    "backend:watch": "dotnet watch --project backend/DITT.Host run",
+    "frontend:serve": "cd frontend/DITT && ng serve",
+    "frontend:build": "cd frontend/DITT && ng build"
+  },
+  "private": true
+}
