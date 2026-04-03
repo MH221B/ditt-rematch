@@ -7,4 +7,22 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PackAsTool>true</PackAsTool>
+    <ToolCommandName>mtp</ToolCommandName>
+    <PackageId>DITT.CLI</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>DITT</Authors>
+    <Description>CLI tool for DITT plugin development</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\\..\\sdk\\DITT.SDK\\DITT.SDK.csproj" />
+  </ItemGroup>
+
 </Project>
