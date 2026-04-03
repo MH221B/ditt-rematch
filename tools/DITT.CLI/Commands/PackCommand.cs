@@ -33,6 +33,29 @@ public static class PackCommand
     //     return command;
     // }
 
+    private static async Task<(string name, string version, string description, bool isPremium)>
+        GetPluginMetadata(string dllPath)
+    {
+        // Load assembly and find IToolPlugin implementation
+        var assembly = System.Reflection.Assembly.LoadFrom(dllPath);
+        var pluginType = assembly.GetTypes()
+            .FirstOrDefault(t => t.GetInterfaces()
+                .Any(i => i.Name == "IToolPlugin"));
+
+        if (pluginType == null)
+        {
+            throw new InvalidOperationException("No IToolPlugin implementation found");
+        }
+
+        var plugin = Activator.CreateInstance(pluginType) as dynamic;
+        
+        if (plugin == null)
+        {
+            throw new InvalidOperationException("Failed to instantiate IToolPlugin");
+        }
+        
+        return (plugin.Name, plugin.Version, plugin.Description, plugin.IsPremium);
+    }
     private static string CalculateSha256(string filePath)
     {
         using var sha256 = SHA256.Create();
