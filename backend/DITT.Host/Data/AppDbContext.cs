@@ -8,6 +8,7 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {}
     
     public DbSet<Tool> Tools => Set<Tool>();
+    public DbSet<PluginPackage> PluginPackages => Set<PluginPackage>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
