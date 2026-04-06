@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Tool } from '../../models/tool.model';
+import { PluginElementLoaderService } from '../../services/plugin-element-loader.service';
 
 @Component({
   selector: 'app-plugin-viewport',
@@ -27,12 +28,27 @@ import { Tool } from '../../models/tool.model';
           </div>
         </div>
         <div class="viewport__content">
-          <!-- Phase 5+: Web Component renders here -->
-          <!-- For now show basic tool interaction -->
-          <div class="tool-placeholder">
-            <p>{{ selectedTool.description }}</p>
-            <p class="hint">Frontend UI coming in Phase 5</p>
-          </div>
+          @if (bundleLoading) {
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <p>Loading {{ selectedTool.name }}...</p>
+            </div>
+          } @else if (bundleError) {
+            <div class="error-message">
+              <p class="error-title">Failed to load plugin UI</p>
+              <p class="error-text">{{ bundleError }}</p>
+              <p class="hint">The plugin backend is available, but the frontend UI could not be loaded.</p>
+            </div>
+          } @else if (hasFrontendBundle) {
+            <!-- Web component will render here after bundle loads -->
+            <div class="web-component-host" [id]="'plugin-' + selectedTool.name.toLowerCase()"></div>
+          } @else {
+            <!-- Fallback for tools without frontend bundles (API-only mode) -->
+            <div class="tool-placeholder">
+              <p>{{ selectedTool.description }}</p>
+              <p class="hint">This tool operates in API-only mode</p>
+            </div>
+          }
         </div>
       }
     </div>
@@ -103,11 +119,63 @@ import { Tool } from '../../models/tool.model';
       background: var(--background-color);
     }
 
-    .tool-placeholder {
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 1rem;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(13, 110, 253, 0.1);
+      border-top-color: var(--primary-color, #0d6efd);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-spinner p {
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    .error-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 1rem;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .error-title {
+      color: var(--text-color);
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .error-text {
       color: var(--text-color);
       opacity: 0.7;
-      text-align: center;
-      margin-top: 2rem;
+      margin: 0;
+      font-family: monospace;
+      font-size: 0.9rem;
+      background: rgba(220, 53, 69, 0.1);
+      padding: 0.75rem;
+      border-radius: 4px;
+      word-break: break-word;
     }
 
     .hint {
@@ -115,15 +183,77 @@ import { Tool } from '../../models/tool.model';
       color: var(--text-color);
       opacity: 0.5;
       font-style: italic;
+      margin: 0;
+    }
+
+    .tool-placeholder {
+      color: var(--text-color);
+      opacity: 0.7;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .web-component-host {
+      width: 100%;
+      height: 100%;
     }
   `]
 })
 export class PluginViewportComponent implements OnChanges {
   @Input() selectedTool: Tool | null = null;
 
+  bundleLoading = false;
+  bundleError: string | null = null;
+  hasFrontendBundle = false;
+
+  constructor(private pluginElementLoaderService: PluginElementLoaderService) {}
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedTool'] && this.selectedTool) {
-      console.log(`Loading tool: ${this.selectedTool.name}`);
+      this.loadBundle();
+    }
+  }
+
+  private async loadBundle(): Promise<void> {
+    if (!this.selectedTool) return;
+
+    // Check if tool has a frontend bundle
+    if (!this.selectedTool.frontendBundleUrl) {
+      this.hasFrontendBundle = false;
+      this.bundleLoading = false;
+      this.bundleError = null;
+      console.log(`Tool ${this.selectedTool.name} has no frontend bundle (API-only mode)`);
+      return;
+    }
+
+    // Check if already loaded
+    if (this.pluginElementLoaderService.isLoaded(this.selectedTool.name)) {
+      this.hasFrontendBundle = true;
+      this.bundleLoading = false;
+      this.bundleError = null;
+      console.log(`Tool ${this.selectedTool.name} bundle already loaded`);
+      return;
+    }
+
+    // Load the bundle
+    this.bundleLoading = true;
+    this.bundleError = null;
+
+    try {
+      console.log(`Loading bundle for ${this.selectedTool.name}: ${this.selectedTool.frontendBundleUrl}`);
+      await this.pluginElementLoaderService.loadPluginBundle(
+        this.selectedTool.name,
+        this.selectedTool.frontendBundleUrl
+      );
+
+      this.hasFrontendBundle = true;
+      this.bundleLoading = false;
+      console.log(`✅ Bundle loaded for ${this.selectedTool.name}`);
+    } catch (error: any) {
+      this.bundleLoading = false;
+      const errorMsg = error?.message || 'Unknown error loading bundle';
+      this.bundleError = errorMsg;
+      console.error(`❌ Failed to load bundle for ${this.selectedTool.name}:`, error);
     }
   }
 }
