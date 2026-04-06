@@ -11,5 +11,6 @@ public class Tool
     public bool IsBuiltIn { get; set; }
     public ToolStatus Status { get; set; }
     public bool IsPremium { get; set; }
+    public string? FrontendBundlePath { get; set; }
 
 }
