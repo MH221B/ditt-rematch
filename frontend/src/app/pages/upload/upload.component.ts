@@ -14,7 +14,7 @@ import { UploadService, UploadResponse } from '../../services/upload.service';
         <h1 class="fw-bold text-primary">Upload Your Own Plugin in Just a Few Quick Steps</h1>
       </div>
 
-      <div class="container mb-5">
+      <div class="container mb-5 p-0">
         <div class="card">
           <div class="card-header h1 text-center text-uppercase">Upload Your Plugin</div>
           <div class="card-body">

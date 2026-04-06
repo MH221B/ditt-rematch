@@ -22,17 +22,17 @@ import { CommonModule } from '@angular/common';
               <!-- Navbar Brand -->
               <a class="navbar-brand" [href]="isAdmin ? '/admin' : '/'">DITT</a>
 
-              <!-- Nav Links (Admin only for now) -->
-              @if (isAdmin) {
-                <ul class="navbar-nav">
-                  <li class="nav-item">
-                    <a class="nav-link" href="/upload">Upload</a>
-                  </li>
+              <!-- Nav Links -->
+              <ul class="navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="/upload">Upload</a>
+                </li>
+                @if (isAdmin) {
                   <li class="nav-item">
                     <a class="nav-link" href="/admin/manage-request">Manage Requests</a>
                   </li>
-                </ul>
-              }
+                }
+              </ul>
 
               <!-- Favorite Tools Link (non-admin only) -->
               @if (!isAdmin) {
@@ -90,7 +90,7 @@ export class NavbarComponent {
   // Mock user state (replace with auth service later)
   isLoggedIn = false;
   username = 'User';
-  isAdmin = true;
+  isAdmin = false;
   isPremium = false;
 
   setPremium(): void {
