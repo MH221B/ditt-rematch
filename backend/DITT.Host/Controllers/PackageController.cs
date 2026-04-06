@@ -178,6 +178,80 @@ public class PackageController : ControllerBase
         }));
     }
 
+    /// <summary>
+    /// Serves frontend bundle files (JS, CSS, WASM, etc.) from uploaded packages.
+    /// Route: GET /api/packages/{id}/bundle/{**path}
+    /// Example: GET /api/packages/abc123/bundle/plugin-bundle.js
+    /// </summary>
+    [HttpGet("{id}/bundle/{**path}")]
+    public async Task<IActionResult> GetBundle(Guid id, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return BadRequest(new { error = "File path required" });
+
+        // Allowed file extensions for security
+        var allowedExtensions = new[] { ".js", ".css", ".wasm", ".map" };
+        var fileExtension = Path.GetExtension(path).ToLowerInvariant();
+        
+        if (!allowedExtensions.Contains(fileExtension))
+            return Forbid();
+
+        try
+        {
+            // Get package from database
+            var packages = await _packageService.GetPackagesAsync();
+            var package = packages.FirstOrDefault(p => p.Id == id);
+
+            if (package == null)
+                return NotFound(new { error = "Package not found" });
+
+            if (string.IsNullOrEmpty(package.PackagePath))
+                return NotFound(new { error = "Package path not configured" });
+
+            // Construct the requested file path
+            var bundleDir = Path.Combine(package.PackagePath, "frontend");
+            var requestedFile = Path.Combine(bundleDir, path);
+
+            // Security: Prevent directory traversal attacks
+            var fullPath = Path.GetFullPath(requestedFile);
+            var fullBundleDir = Path.GetFullPath(bundleDir);
+
+            if (!fullPath.StartsWith(fullBundleDir, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Directory traversal attempt blocked for package {PackageId}", id);
+                return Forbid();
+            }
+
+            // Check if file exists
+            if (!System.IO.File.Exists(fullPath))
+            {
+                _logger.LogWarning("Bundle file not found: {FilePath}", fullPath);
+                return NotFound(new { error = "File not found" });
+            }
+
+            // Determine content type
+            var contentType = fileExtension switch
+            {
+                ".js" => "application/javascript",
+                ".css" => "text/css",
+                ".wasm" => "application/wasm",
+                ".map" => "application/json",
+                _ => "application/octet-stream"
+            };
+
+            // Read and return file
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+            _logger.LogInformation("Serving bundle file: {FilePath}", fullPath);
+            
+            return File(fileBytes, contentType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error serving bundle file for package {PackageId}", id);
+            return StatusCode(500, new { error = "Error retrieving file", details = ex.Message });
+        }
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
