@@ -16,9 +16,9 @@ import { filter } from 'rxjs/operators';
     <div class="app-shell">
       <app-navbar />
       <div class="app-body">
-        <!-- Show sidebar only on home page -->
+        <!-- Sidebar available on all routes -->
+        <app-sidebar (toolSelected)="onToolSelected($event)" />
         @if (isHomePage) {
-          <app-sidebar (toolSelected)="onToolSelected($event)" />
           <main class="app-content">
             <app-plugin-viewport [selectedTool]="selectedTool" />
           </main>
