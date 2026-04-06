@@ -124,7 +124,7 @@ public class PackageController : ControllerBase
             }
 
             // Register the tool in the database
-            await _toolRegistrationService.RegisterAsync(plugin, isBuiltIn: false, frontendBundlePath: package.FrontendBundlePath);
+            await _toolRegistrationService.RegisterAsync(plugin, isBuiltIn: false, frontendBundlePath: package.FrontendBundlePath, packageId: package.Id);
 
             // Link package to tool
             package.Status = PackageStatus.Installed;

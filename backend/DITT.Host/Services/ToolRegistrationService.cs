@@ -18,7 +18,7 @@ namespace DITT.Host.Services
             _logger = logger;
         }
 
-        public async Task RegisterAsync(IToolPlugin plugin, bool isBuiltIn, string? frontendBundlePath = null)
+        public async Task RegisterAsync(IToolPlugin plugin, bool isBuiltIn, string? frontendBundlePath = null, Guid? packageId = null)
         {
             var existing = await _db.Tools.FirstOrDefaultAsync(t => t.Name == plugin.Name);
             if (existing != null)
@@ -29,6 +29,7 @@ namespace DITT.Host.Services
                 existing.IsBuiltIn = isBuiltIn;
                 existing.IsPremium = plugin.IsPremium;
                 existing.FrontendBundlePath = frontendBundlePath;
+                existing.PackageId = packageId;
 
                 _logger.LogInformation("Updated existing tool registration: {Name} v{Version}", plugin.Name, plugin.Version);
             }
@@ -43,7 +44,8 @@ namespace DITT.Host.Services
                     Status = ToolStatus.Active,
                     IsBuiltIn = isBuiltIn,
                     IsPremium = plugin.IsPremium,
-                    FrontendBundlePath = frontendBundlePath
+                    FrontendBundlePath = frontendBundlePath,
+                    PackageId = packageId
                 });
 
                 _logger.LogInformation("Registered new tool: {Name} v{Version}", plugin.Name, plugin.Version);

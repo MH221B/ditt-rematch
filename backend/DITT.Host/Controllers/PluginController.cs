@@ -36,7 +36,9 @@ namespace DITT.Host.Controllers
                 t.IsBuiltIn,
                 t.Status,
                 t.IsPremium,
-                t.FrontendBundlePath
+                frontendBundleUrl = t.PackageId.HasValue && !string.IsNullOrEmpty(t.FrontendBundlePath)
+                    ? $"/api/packages/{t.PackageId}/bundle/plugin-bundle.js"
+                    : null
             }));
         }
 
