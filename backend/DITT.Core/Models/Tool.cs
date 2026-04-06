@@ -12,5 +12,6 @@ public class Tool
     public ToolStatus Status { get; set; }
     public bool IsPremium { get; set; }
     public string? FrontendBundlePath { get; set; }
+    public Guid? PackageId { get; set; }
 
 }
