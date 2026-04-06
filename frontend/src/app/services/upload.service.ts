@@ -13,6 +13,7 @@ export interface UploadResponse {
     description?: string;
     status: string;
     uploadedAt?: string;
+    frontendBundlePath?: string;
   };
   tool?: any;
 }
