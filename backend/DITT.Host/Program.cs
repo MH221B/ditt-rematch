@@ -6,6 +6,7 @@ using DITT.PluginLoader;
 using DITT.Host.Services.Interfaces;
 using DITT.Host.Services;
 using DITT.Core.Enums;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,7 @@ builder.Services.AddSingleton(sp =>
     ));
 
 builder.Services.AddScoped<IToolRegistrationService, ToolRegistrationService>();
+builder.Services.AddScoped<IPackageService, PackageService>();
 
 // Configure built-in plugins' services before building the app
 var tempPluginManager = new PluginManager(
@@ -64,6 +66,12 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
               .AllowAnyMethod());
+});
+
+// File upload size limit (50MB for packages)
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 52428800; // 50MB
 });
 
 var app = builder.Build();
