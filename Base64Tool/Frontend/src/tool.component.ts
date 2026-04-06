@@ -319,7 +319,7 @@ export class Base64ToolComponent {
   decodeError = '';
   decodeUrlSafe = false;
 
-  private readonly apiBase = 'http://localhost:5000/api/tools/Base64Tool';
+  private readonly apiBase = 'http://localhost:5080/api/tools/Base64Tool';
 
   constructor(private http: HttpClient) {}
 

@@ -2,6 +2,7 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Tool } from '../../models/tool.model';
 import { PluginElementLoaderService } from '../../services/plugin-element-loader.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-plugin-viewport',
@@ -240,10 +241,12 @@ export class PluginViewportComponent implements OnChanges {
     this.bundleError = null;
 
     try {
-      console.log(`Loading bundle for ${this.selectedTool.name}: ${this.selectedTool.frontendBundleUrl}`);
+      // Construct the full bundle URL using the API URL
+      const bundleUrl = `${environment.apiUrl}${this.selectedTool.frontendBundleUrl}`;
+      console.log(`Loading bundle for ${this.selectedTool.name}: ${bundleUrl}`);
       await this.pluginElementLoaderService.loadPluginBundle(
         this.selectedTool.name,
-        this.selectedTool.frontendBundleUrl
+        bundleUrl
       );
 
       this.hasFrontendBundle = true;

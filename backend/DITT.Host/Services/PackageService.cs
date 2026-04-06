@@ -35,7 +35,7 @@ public class PackageService : IPackageService
         try
         {
             // Extract and validate
-            var (manifest, extractPath) = await ExtractPackageAsync(tempPath);
+            var (manifest, extractPath) = await ExtractPackageAsync(tempPath, _packagesDir);
             var (validation, dllPath) = await ValidatePackageAsync(manifest, extractPath);
 
             if (!validation.IsValid)
@@ -157,9 +157,9 @@ public class PackageService : IPackageService
         return manifest;
     }
 
-    private async Task<(PluginManifest manifest, string extractPath)> ExtractPackageAsync(string packagePath)
+    private async Task<(PluginManifest manifest, string extractPath)> ExtractPackageAsync(string packagePath, string targetDir)
     {
-        var extractPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var extractPath = Path.Combine(targetDir, $".temp-{Guid.NewGuid()}");
         Directory.CreateDirectory(extractPath);
 
         ZipFile.ExtractToDirectory(packagePath, extractPath);
