@@ -127,6 +127,21 @@ using (var scope = app.Services.CreateScope())
                 if (loadResult.IsValid)
                 {
                     Console.WriteLine($"♻️ Reloaded plugin: {package.Name}");
+
+                    // Get the loaded plugin instance and register it with package info
+                    var plugin = pluginManager.GetAllInstances()
+                        .FirstOrDefault(p => p.Name == loadResult.LoadedPluginName);
+                    
+                    if (plugin != null)
+                    {
+                        await registrationService.RegisterAsync(
+                            plugin,
+                            isBuiltIn: false,
+                            frontendBundlePath: package.FrontendBundlePath,
+                            packageId: package.Id
+                        );
+                        Console.WriteLine($"📦 Registered startup plugin: {package.Name} with PackageId {package.Id}");
+                    }
                 }
                 else
                 {
