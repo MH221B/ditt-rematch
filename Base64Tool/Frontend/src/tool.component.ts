@@ -331,7 +331,6 @@ export class Base64ToolComponent {
 
     this.encodeLoading = true;
     this.encodeError = '';
-    this.encodeResult = '';
 
     this.http
       .post<{ success: boolean; data: string; error?: string }>(
@@ -362,7 +361,6 @@ export class Base64ToolComponent {
 
     this.decodeLoading = true;
     this.decodeError = '';
-    this.decodeResult = '';
 
     this.http
       .post<{ success: boolean; data: string; error?: string }>(
