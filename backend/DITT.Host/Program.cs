@@ -6,6 +6,7 @@ using DITT.PluginLoader;
 using DITT.Host.Services.Interfaces;
 using DITT.Host.Services;
 using DITT.Core.Enums;
+using DITT.Core.Models;
 using Microsoft.AspNetCore.Http.Features;
 using System.Reflection;
 using DITT.SDK;
@@ -106,24 +107,43 @@ using (var scope = app.Services.CreateScope())
     foreach (var plugin in pluginManager.GetAllInstances())
         await registrationService.RegisterAsync(plugin, isBuiltIn: true);
 
-    // Reload uploaded plugins from disk on startup
-    var uploadedTools = await dbContext.Tools
-        .Where(t => !t.IsBuiltIn && t.Status == ToolStatus.Active)
+    // Reload installed packages from disk on startup
+    var packageService = scope.ServiceProvider.GetRequiredService<IPackageService>();
+    var installedPackages = await dbContext.PluginPackages
+        .Where(p => p.Status == PackageStatus.Installed)
         .ToListAsync();
 
-    foreach (var tool in uploadedTools)
+    foreach (var package in installedPackages)
     {
-        var dllPath = Path.Combine(pluginDirectory, tool.Name, $"{tool.Name}.dll");
+        try
+        {
+            // Extract manifest to get DLL path
+            var manifest = await packageService.ExtractManifestFromPackageAsync(package.PackagePath);
+            var dllPath = Path.Combine(package.PackagePath, manifest.PluginDll);
 
-        if (File.Exists(dllPath))
-        {
-            await pluginManager.LoadPluginAsync(dllPath);
-            Console.WriteLine($"♻️ Reloaded plugin: {tool.Name}");
+            if (File.Exists(dllPath))
+            {
+                var loadResult = await pluginManager.LoadPluginAsync(dllPath);
+                if (loadResult.IsValid)
+                {
+                    Console.WriteLine($"♻️ Reloaded plugin: {package.Name}");
+                }
+                else
+                {
+                    package.Status = PackageStatus.Failed;
+                    Console.WriteLine($"⚠️ Plugin validation failed for {package.Name}: {string.Join(", ", loadResult.Errors)}");
+                }
+            }
+            else
+            {
+                package.Status = PackageStatus.Failed;
+                Console.WriteLine($"⚠️ Plugin DLL missing for {package.Name}: {dllPath}");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            tool.Status = ToolStatus.Inactive;
-            Console.WriteLine($"⚠️ Plugin DLL missing: {tool.Name}");
+            package.Status = PackageStatus.Failed;
+            Console.WriteLine($"❌ Error reloading package {package.Name}: {ex.Message}");
         }
     }
 
