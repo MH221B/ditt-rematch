@@ -232,6 +232,7 @@ export class PluginViewportComponent implements OnChanges {
       this.hasFrontendBundle = true;
       this.bundleLoading = false;
       this.bundleError = null;
+      this.mountWebComponent();
       console.log(`Tool ${this.selectedTool.name} bundle already loaded`);
       return;
     }
@@ -251,6 +252,10 @@ export class PluginViewportComponent implements OnChanges {
 
       this.hasFrontendBundle = true;
       this.bundleLoading = false;
+      
+      // Create and mount the Web Component
+      this.mountWebComponent();
+      
       console.log(`✅ Bundle loaded for ${this.selectedTool.name}`);
     } catch (error: any) {
       this.bundleLoading = false;
@@ -258,5 +263,33 @@ export class PluginViewportComponent implements OnChanges {
       this.bundleError = errorMsg;
       console.error(`❌ Failed to load bundle for ${this.selectedTool.name}:`, error);
     }
+  }
+
+  private mountWebComponent(): void {
+    if (!this.selectedTool) return;
+
+    // Use setTimeout to ensure DOM has been updated with the container
+    setTimeout(() => {
+      try {
+        const elementName = `ditt-plugin-${this.selectedTool!.name.toLowerCase()}`;
+        const container = document.querySelector('.web-component-host');
+        
+        if (!container) {
+          console.warn(`Container .web-component-host not found for ${this.selectedTool!.name}`);
+          return;
+        }
+
+        // Clear previous content
+        container.innerHTML = '';
+
+        // Create and mount the Web Component
+        const element = document.createElement(elementName);
+        container.appendChild(element);
+        
+        console.log(`✅ Web Component ${elementName} mounted to DOM`);
+      } catch (error) {
+        console.error(`Failed to mount web component for ${this.selectedTool!.name}:`, error);
+      }
+    }, 0);
   }
 }
