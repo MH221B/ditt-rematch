@@ -24,10 +24,20 @@ namespace DITT.Host.Controllers
 
         // List all Plugins
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var plugins = _pluginManager.GetLoadedPlugins();
-            return Ok(plugins);
+            var tools = await _registrationService.GetAllActiveAsync();
+            return Ok(tools.Select(t => new
+            {
+                t.Id,
+                t.Name,
+                t.Version,
+                t.Description,
+                t.IsBuiltIn,
+                t.Status,
+                t.IsPremium,
+                t.FrontendBundlePath
+            }));
         }
 
         // Upload Plugin

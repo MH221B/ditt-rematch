@@ -78,7 +78,8 @@ public class PackageController : ControllerBase
                 package.Author,
                 package.Description,
                 package.Status,
-                package.UploadedAt
+                package.UploadedAt,
+                package.FrontendBundlePath
             },
             tool = loadResult.tool
         });
@@ -123,7 +124,7 @@ public class PackageController : ControllerBase
             }
 
             // Register the tool in the database
-            await _toolRegistrationService.RegisterAsync(plugin, isBuiltIn: false);
+            await _toolRegistrationService.RegisterAsync(plugin, isBuiltIn: false, frontendBundlePath: package.FrontendBundlePath);
 
             // Link package to tool
             package.Status = PackageStatus.Installed;
@@ -136,7 +137,8 @@ public class PackageController : ControllerBase
             {
                 plugin.Name,
                 plugin.Version,
-                plugin.Description
+                plugin.Description,
+                package.FrontendBundlePath
             });
         }
         catch (Exception ex)
