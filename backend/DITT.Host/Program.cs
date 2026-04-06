@@ -7,6 +7,8 @@ using DITT.Host.Services.Interfaces;
 using DITT.Host.Services;
 using DITT.Core.Enums;
 using Microsoft.AspNetCore.Http.Features;
+using System.Reflection;
+using DITT.SDK;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,14 +51,16 @@ builder.Services.AddScoped<IToolRegistrationService, ToolRegistrationService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
 
 // Configure built-in plugins' services before building the app
-var tempPluginManager = new PluginManager(
-    new Logger<PluginManager>(new LoggerFactory()),
-    pluginDirectory
-);
-tempPluginManager.RegisterBuiltInTools();
-foreach (var plugin in tempPluginManager.GetAllInstances())
+var builtInTypes = Assembly.GetEntryAssembly()!
+    .GetTypes()
+    .Where(t => typeof(IToolPlugin).IsAssignableFrom(t) 
+                && !t.IsAbstract 
+                && !t.IsInterface);
+
+foreach (var type in builtInTypes)
 {
-    plugin.ConfigureServices(builder.Services);
+    var instance = (IToolPlugin)Activator.CreateInstance(type)!;
+    instance.ConfigureServices(builder.Services);
 }
 
 // CORS
