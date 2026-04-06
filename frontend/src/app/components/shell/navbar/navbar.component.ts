@@ -90,7 +90,7 @@ export class NavbarComponent {
   // Mock user state (replace with auth service later)
   isLoggedIn = false;
   username = 'User';
-  isAdmin = false;
+  isAdmin = true;
   isPremium = false;
 
   setPremium(): void {
