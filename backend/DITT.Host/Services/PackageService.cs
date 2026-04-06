@@ -22,10 +22,10 @@ public class PackageService : IPackageService
         Directory.CreateDirectory(_packagesDir);
     }
 
-    public async Task<(bool success, string error, PluginPackage? package)> UploadPackageAsync(IFormFile file)
+    public async Task<(bool success, string error, PluginPackage? package, string? dllPath, PluginManifest? manifest)> UploadPackageAsync(IFormFile file)
     {
         if (!file.FileName.EndsWith(".mtpkg"))
-            return (false, "File must be .mtpkg extension", null);
+            return (false, "File must be .mtpkg extension", null, null, null);
         
         // Save uploaded file
         var tempPath = Path.GetTempFileName();
@@ -36,12 +36,12 @@ public class PackageService : IPackageService
         {
             // Extract and validate
             var (manifest, extractPath) = await ExtractPackageAsync(tempPath);
-            var validation = await ValidatePackageAsync(manifest, extractPath);
+            var (validation, dllPath) = await ValidatePackageAsync(manifest, extractPath);
 
             if (!validation.IsValid)
             {
                 Directory.Delete(extractPath, true);
-                return (false, string.Join(", ", validation.Errors), null);
+                return (false, string.Join(", ", validation.Errors), null, null, null);
             }
 
             // Check for duplicates
@@ -50,7 +50,7 @@ public class PackageService : IPackageService
             if (existing != null)
             {
                 Directory.Delete(extractPath, true);
-                return (false, $"Package {manifest.Name} v{manifest.Version} already exists", null);
+                return (false, $"Package {manifest.Name} v{manifest.Version} already exists", null, null, null);
             }
 
             // Move to permanent storage
@@ -79,15 +79,18 @@ public class PackageService : IPackageService
             _db.PluginPackages.Add(package);
             await _db.SaveChangesAsync();
 
+            // Compute final DLL path with permanent storage location
+            var finalDllPath = Path.Combine(packageDir, manifest.PluginDll);
+
             _logger.LogInformation("📦 Package uploaded: {Name} v{Version}", 
                 manifest.Name, manifest.Version);
 
-            return (true, string.Empty, package);
+            return (true, string.Empty, package, finalDllPath, manifest);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to process package upload");
-            return (false, $"Package processing failed: {ex.Message}", null);
+            return (false, $"Package processing failed: {ex.Message}", null, null, null);
         }
         finally
         {
@@ -131,6 +134,29 @@ public class PackageService : IPackageService
         }
     }
 
+    // Update package status and tool link
+    public async Task UpdatePackageAsync(PluginPackage package)
+    {
+        _db.PluginPackages.Update(package);
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Updated package: {Name} v{Version}, Status: {Status}", 
+            package.Name, package.Version, package.Status);
+    }
+
+    // Helper to extract manifest from an existing package (used during startup)
+    public async Task<PluginManifest> ExtractManifestFromPackageAsync(string packagePath)
+    {
+        var manifestPath = Path.Combine(packagePath, "manifest.json");
+        if (!File.Exists(manifestPath))
+            throw new InvalidOperationException($"Manifest not found in package: {packagePath}");
+        
+        var manifestJson = await File.ReadAllTextAsync(manifestPath);
+        var manifest = JsonSerializer.Deserialize<PluginManifest>(manifestJson) 
+            ?? throw new InvalidOperationException("Invalid manifest.json");
+        
+        return manifest;
+    }
+
     private async Task<(PluginManifest manifest, string extractPath)> ExtractPackageAsync(string packagePath)
     {
         var extractPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -147,12 +173,12 @@ public class PackageService : IPackageService
         return (manifest, extractPath);
     }
 
-    private async Task<ValidationResult> ValidatePackageAsync(PluginManifest manifest, string extractPath)
+    private async Task<(ValidationResult validation, string? dllPath)> ValidatePackageAsync(PluginManifest manifest, string extractPath)
     {
         var errors = new List<string>();
+        var dllPath = Path.Combine(extractPath, manifest.PluginDll);
 
         // Validate DLL exists
-        var dllPath = Path.Combine(extractPath, manifest.PluginDll);
         if (!File.Exists(dllPath))
             errors.Add($"Plugin DLL not found: {manifest.PluginDll}");
         else
@@ -171,11 +197,13 @@ public class PackageService : IPackageService
                 errors.Add($"Frontend bundle not found: {manifest.FrontendBundle}");
         }
 
-        return new ValidationResult
+        var validation = new ValidationResult
         {
             IsValid = errors.Count == 0,
             Errors = errors
         };
+
+        return (validation, errors.Count == 0 ? dllPath : null);
     }
 
     private static string CalculateSha256(string filePath)
