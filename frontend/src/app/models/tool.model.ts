@@ -6,7 +6,7 @@ export interface Tool {
   isBuiltIn: boolean;
   isPremium: boolean;
   status: ToolStatus;
-  frontendBundlePath?: string; // Path/URL to frontend bundle served from backend
+  frontendBundleUrl?: string; // Computed URL to frontend bundle served from backend
 }
 
 export enum ToolStatus {
