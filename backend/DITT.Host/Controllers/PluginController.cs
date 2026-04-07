@@ -1,4 +1,5 @@
 using DITT.Core.Enums;
+using DITT.Host.Services;
 using DITT.Host.Services.Interfaces;
 using DITT.PluginLoader;
 using Microsoft.AspNetCore.Mvc;
@@ -11,13 +12,15 @@ namespace DITT.Host.Controllers
     {
         private readonly PluginManager _pluginManager;
         private readonly IToolRegistrationService _registrationService;
+        private readonly IPackageService _packageService;
         private readonly ILogger<PluginController> _logger;
         private readonly string _pluginDirectory;
 
-        public PluginController(PluginManager pluginManager, IToolRegistrationService registrationService, ILogger<PluginController> logger, IConfiguration config)
+        public PluginController(PluginManager pluginManager, IToolRegistrationService registrationService, IPackageService packageService, ILogger<PluginController> logger, IConfiguration config)
         {
             _pluginManager = pluginManager;
             _registrationService = registrationService;
+            _packageService = packageService;
             _logger = logger;
             _pluginDirectory = config["PluginDirectory"]
             ?? Path.Combine(Directory.GetCurrentDirectory(), "plugins");
@@ -182,6 +185,69 @@ namespace DITT.Host.Controllers
                     ? $"/api/packages/{tool.PackageId}/bundle/plugin-bundle.js"
                     : null
             });
+        }
+
+        // Delete Tool
+        [HttpDelete("{name}")]
+        public async Task<IActionResult> Delete(string name)
+        {
+            try
+            {
+                // Get all tools to find the one to delete
+                var allTools = await _registrationService.GetAllAsync();
+                var tool = allTools.FirstOrDefault(t => t.Name == name);
+
+                if (tool == null)
+                    return NotFound(new { error = $"Tool '{name}' not found." });
+
+                // Handle built-in tools: soft delete (change status to Disabled)
+                if (tool.IsBuiltIn)
+                {
+                    if (tool.Status == ToolStatus.Disabled)
+                        return BadRequest(new { error = $"Tool '{name}' is already disabled." });
+
+                    await _registrationService.UpdateToolStatusAsync(name, ToolStatus.Disabled);
+                    _logger.LogInformation("Disabled built-in tool: {ToolName}", name);
+                    return Ok(new { message = $"Built-in tool '{name}' has been disabled." });
+                }
+
+                // Handle plugin tools: hard delete (unload + delete package)
+                try
+                {
+                    // Unload plugin from memory if it's loaded
+                    if (_pluginManager.IsLoaded(name))
+                    {
+                        _pluginManager.UnloadPlugin(name);
+                        _logger.LogInformation("Unloaded plugin: {PluginName}", name);
+                    }
+
+                    // Unregister the tool
+                    await _registrationService.UnregisterAsync(name);
+                    _logger.LogInformation("Unregistered tool: {ToolName}", name);
+
+                    // Delete associated package if it exists
+                    if (tool.PackageId.HasValue)
+                    {
+                        var success = await _packageService.DeletePackageAsync(tool.PackageId.Value);
+                        if (success)
+                            _logger.LogInformation("Deleted package for tool: {ToolName}", name);
+                        else
+                            _logger.LogWarning("Failed to delete package for tool: {ToolName}", name);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting plugin tool: {ToolName}", name);
+                    return StatusCode(500, new { error = $"Error deleting tool '{name}': {ex.Message}" });
+                }
+
+                return Ok(new { message = $"Plugin tool '{name}' has been deleted." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error deleting tool: {ToolName}", name);
+                return StatusCode(500, new { error = "An unexpected error occurred while deleting the tool." });
+            }
         }
     }
 

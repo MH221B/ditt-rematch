@@ -120,6 +120,16 @@ export class PluginService {
     );
   }
 
+  // Delete tool (soft delete for built-in, hard delete for plugins)
+  deleteTool(toolName: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/api/plugins/${toolName}`).pipe(
+      tap(() => {
+        // Refresh the tools cache after successful deletion
+        this.refreshAllCaches();
+      })
+    );
+  }
+
   // Public method to refresh all caches from API
   refreshAllCaches(): void {
     this.pluginsLoaded = false;

@@ -603,11 +603,48 @@ export class PluginViewportComponent implements OnInit, OnChanges, OnDestroy {
 
   deleteTool(tool: Tool, event: Event): void {
     event.preventDefault();
-    if (confirm(`Are you sure you want to delete "${tool.name}"?`)) {
+    
+    // Use different confirmation messages for built-in vs plugin tools
+    const message = tool.isBuiltIn 
+      ? `Disable "${tool.name}"? It can be re-enabled later.`
+      : `Delete "${tool.name}"? This will permanently remove the plugin.`;
+    
+    if (confirm(message)) {
       console.log(`Deleting tool: ${tool.name}`);
-      // TODO: Call PluginService to delete tool
-      // this.pluginService.deleteTool(tool.name).subscribe(...)
-      this.tools = this.tools.filter(t => t.name !== tool.name);
+      
+      // If the tool is currently selected, deselect it after deletion
+      const isSelected = this.selectedTool?.name === tool.name;
+      
+      this.pluginService.deleteTool(tool.name)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            console.log(`✅ Tool '${tool.name}' deleted successfully:`, response);
+            
+            // Remove from local tools array
+            this.tools = this.tools.filter(t => t.name !== tool.name);
+            
+            // Deselect if it was the currently selected tool
+            if (isSelected) {
+              this.selectedTool = null;
+              this.bundleLoading = false;
+              this.bundleError = null;
+            }
+            
+            this.toggleError = null;
+          },
+          error: (error) => {
+            console.error(`❌ Failed to delete tool '${tool.name}':`, error);
+            
+            // Show error message
+            this.toggleError = error?.error?.error || error?.error?.message || `Failed to delete ${tool.name}`;
+            
+            // Auto-clear error after 5 seconds
+            setTimeout(() => {
+              this.toggleError = null;
+            }, 5000);
+          }
+        });
     }
   }
 
