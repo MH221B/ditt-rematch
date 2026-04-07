@@ -30,6 +30,11 @@ export class PluginService {
     return this.http.put<Tool>(`${this.baseUrl}/api/plugins/${name}/status`, { status });
   }
 
+  // Update tool premium status
+  updateToolPremium(name: string, isPremium: boolean): Observable<Tool> {
+    return this.http.put<Tool>(`${this.baseUrl}/api/plugins/${name}/premium`, { isPremium });
+  }
+
   // Upload plugin DLL
   uploadPlugin(file: File): Observable<any> {
     const formData = new FormData();

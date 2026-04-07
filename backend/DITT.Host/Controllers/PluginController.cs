@@ -157,10 +157,41 @@ namespace DITT.Host.Controllers
                     : null
             });
         }
+
+        // Update Tool Premium Status
+        [HttpPut("{name}/premium")]
+        public async Task<IActionResult> UpdatePremium(string name, [FromBody] UpdateToolPremiumRequest request)
+        {
+            if (request == null)
+                return BadRequest("Invalid request.");
+
+            var tool = await _registrationService.UpdatePremiumAsync(name, request.IsPremium);
+            if (tool == null)
+                return NotFound($"Tool '{name}' not found.");
+
+            return Ok(new
+            {
+                tool.Id,
+                tool.Name,
+                tool.Version,
+                tool.Description,
+                tool.IsBuiltIn,
+                tool.Status,
+                tool.IsPremium,
+                frontendBundleUrl = tool.PackageId.HasValue && !string.IsNullOrEmpty(tool.FrontendBundlePath)
+                    ? $"/api/packages/{tool.PackageId}/bundle/plugin-bundle.js"
+                    : null
+            });
+        }
     }
 
     public class UpdateToolStatusRequest
     {
         public string Status { get; set; } = string.Empty;
+    }
+
+    public class UpdateToolPremiumRequest
+    {
+        public bool IsPremium { get; set; }
     }
 }

@@ -100,5 +100,22 @@ namespace DITT.Host.Services
             _logger.LogInformation("Updated tool status: {Name} from {OldStatus} to {NewStatus}", name, oldStatus, newStatus);
             return tool;
         }
+
+        public async Task<Tool?> UpdatePremiumAsync(string name, bool isPremium)
+        {
+            var tool = await _db.Tools.FirstOrDefaultAsync(t => t.Name == name);
+            if (tool == null)
+            {
+                _logger.LogWarning("Attempted to update premium status of non-existent tool: {Name}", name);
+                return null;
+            }
+
+            var oldValue = tool.IsPremium;
+            tool.IsPremium = isPremium;
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Updated tool premium status: {Name} from {OldValue} to {NewValue}", name, oldValue, isPremium);
+            return tool;
+        }
     }
 }

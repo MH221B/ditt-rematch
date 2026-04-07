@@ -13,5 +13,6 @@ namespace DITT.Host.Services.Interfaces
         public Task<IEnumerable<Tool>> GetAllAsync();
         public Task<IEnumerable<Tool>> GetByStatusAsync(ToolStatus status);
         public Task<Tool?> UpdateToolStatusAsync(string name, ToolStatus newStatus);
+        public Task<Tool?> UpdatePremiumAsync(string name, bool isPremium);
     }
 }

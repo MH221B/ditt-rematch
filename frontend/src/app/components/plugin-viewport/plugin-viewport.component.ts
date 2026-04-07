@@ -556,10 +556,36 @@ export class PluginViewportComponent implements OnInit, OnChanges {
 
   togglePremiumTool(tool: Tool, event: Event): void {
     event.preventDefault();
-    console.log(`${tool.isPremium ? 'Removing' : 'Making'} premium: ${tool.name}`);
-    // TODO: Call PluginService to toggle premium
-    // this.pluginService.togglePremiumTool(tool.name).subscribe(...)
-    tool.isPremium = !tool.isPremium;
+    
+    const newPremiumValue = !tool.isPremium;
+    const oldPremiumValue = tool.isPremium;
+    
+    // Optimistic UI update
+    tool.isPremium = newPremiumValue;
+    this.toggleError = null;
+    
+    // Call backend to persist the change
+    this.pluginService.updateToolPremium(tool.name, newPremiumValue).subscribe({
+      next: (updatedTool) => {
+        console.log(`✅ Tool '${tool.name}' premium status updated to: ${newPremiumValue}`);
+        // Update tool with response from backend
+        Object.assign(tool, updatedTool);
+      },
+      error: (error) => {
+        console.error(`❌ Failed to update tool '${tool.name}' premium status:`, error);
+        
+        // Revert the UI change
+        tool.isPremium = oldPremiumValue;
+        
+        // Show error message
+        this.toggleError = error?.error?.message || `Failed to update ${tool.name} premium status`;
+        
+        // Auto-clear error after 5 seconds
+        setTimeout(() => {
+          this.toggleError = null;
+        }, 5000);
+      }
+    });
   }
 
   deleteTool(tool: Tool, event: Event): void {
