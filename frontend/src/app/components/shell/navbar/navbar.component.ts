@@ -46,16 +46,16 @@ import { Tool } from '../../../models/tool.model';
               }
             </div>
 
-            <!-- Search Dropdown -->
-            @if (!isAdmin) {
-              <app-search-dropdown
-                [isAdmin]="isAdmin"
-                (toolSelected)="onToolSelected($event)"
-              ></app-search-dropdown>
-            }
-
             <!-- Dynamic User Dropdown or Login/Signup Buttons -->
-            <div class="ms-auto">
+            <div class="ms-auto d-flex align-items-center">
+              <!-- Search Dropdown -->
+              @if (!isAdmin) {
+                <app-search-dropdown
+                  [isAdmin]="isAdmin"
+                  (toolSelected)="onToolSelected($event)"
+                  class="me-3"
+                ></app-search-dropdown>
+              }
               @if (isLoggedIn) {
                 <!-- Dropdown Menu for Logged-In User -->
                 <div class="dropdown">
