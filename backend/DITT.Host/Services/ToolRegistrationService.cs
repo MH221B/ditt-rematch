@@ -73,5 +73,32 @@ namespace DITT.Host.Services
         {
             return await _db.Tools.Where(t => t.Status == ToolStatus.Active).OrderBy(t => t.Name).ToListAsync();
         }
+
+        public async Task<IEnumerable<Tool>> GetAllAsync()
+        {
+            return await _db.Tools.OrderBy(t => t.Name).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Tool>> GetByStatusAsync(ToolStatus status)
+        {
+            return await _db.Tools.Where(t => t.Status == status).OrderBy(t => t.Name).ToListAsync();
+        }
+
+        public async Task<Tool?> UpdateToolStatusAsync(string name, ToolStatus newStatus)
+        {
+            var tool = await _db.Tools.FirstOrDefaultAsync(t => t.Name == name);
+            if (tool == null)
+            {
+                _logger.LogWarning("Attempted to update status of non-existent tool: {Name}", name);
+                return null;
+            }
+
+            var oldStatus = tool.Status;
+            tool.Status = newStatus;
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Updated tool status: {Name} from {OldStatus} to {NewStatus}", name, oldStatus, newStatus);
+            return tool;
+        }
     }
 }

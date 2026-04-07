@@ -1,3 +1,4 @@
+using DITT.Core.Enums;
 using DITT.Host.Services.Interfaces;
 using DITT.PluginLoader;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +23,29 @@ namespace DITT.Host.Controllers
             ?? Path.Combine(Directory.GetCurrentDirectory(), "plugins");
         }
 
-        // List all Plugins
+        // List all Plugins (including disabled)
         [HttpGet]
         public async Task<IActionResult> GetAll()
+        {
+            var tools = await _registrationService.GetAllAsync();
+            return Ok(tools.Select(t => new
+            {
+                t.Id,
+                t.Name,
+                t.Version,
+                t.Description,
+                t.IsBuiltIn,
+                t.Status,
+                t.IsPremium,
+                frontendBundleUrl = t.PackageId.HasValue && !string.IsNullOrEmpty(t.FrontendBundlePath)
+                    ? $"/api/packages/{t.PackageId}/bundle/plugin-bundle.js"
+                    : null
+            }));
+        }
+
+        // List only Active Plugins
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActive()
         {
             var tools = await _registrationService.GetAllActiveAsync();
             return Ok(tools.Select(t => new
@@ -110,5 +131,36 @@ namespace DITT.Host.Controllers
                 return NotFound("Plugin not found.");
             return Ok(tool);
         }
+
+        // Update Tool Status
+        [HttpPut("{name}/status")]
+        public async Task<IActionResult> UpdateStatus(string name, [FromBody] UpdateToolStatusRequest request)
+        {
+            if (request == null || !Enum.TryParse<ToolStatus>(request.Status, out var newStatus))
+                return BadRequest("Invalid status value.");
+
+            var tool = await _registrationService.UpdateToolStatusAsync(name, newStatus);
+            if (tool == null)
+                return NotFound($"Tool '{name}' not found.");
+
+            return Ok(new
+            {
+                tool.Id,
+                tool.Name,
+                tool.Version,
+                tool.Description,
+                tool.IsBuiltIn,
+                tool.Status,
+                tool.IsPremium,
+                frontendBundleUrl = tool.PackageId.HasValue && !string.IsNullOrEmpty(tool.FrontendBundlePath)
+                    ? $"/api/packages/{tool.PackageId}/bundle/plugin-bundle.js"
+                    : null
+            });
+        }
+    }
+
+    public class UpdateToolStatusRequest
+    {
+        public string Status { get; set; } = string.Empty;
     }
 }

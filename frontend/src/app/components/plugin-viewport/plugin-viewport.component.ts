@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, OnInit, Output, SimpleChanges, Type, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Tool } from '../../models/tool.model';
+import { Tool, ToolStatus } from '../../models/tool.model';
 import { PluginElementLoaderService } from '../../services/plugin-element-loader.service';
 import { PluginService } from '../../services/plugin.service';
 import { JsonMinifyComponent } from '../../tools/json-minify/json-minify.component';
@@ -14,6 +14,12 @@ import { environment } from '../../../environments/environment';
     <div class="viewport">
       @if (!selectedTool) {
         <div class="viewport__empty">
+          @if (toggleError) {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              {{ toggleError }}
+              <button type="button" class="btn-close" (click)="toggleError = null"></button>
+            </div>
+          }
           @if (toolsLoading) {
             <div class="loading-state">
               <div class="spinner"></div>
@@ -452,6 +458,33 @@ import { environment } from '../../../environments/environment';
       width: 100%;
       height: 100%;
     }
+
+    .alert {
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .alert-danger {
+      background-color: rgba(220, 53, 69, 0.1);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+      color: #dc3545;
+    }
+
+    .alert.alert-dismissible {
+      padding-right: 2.5rem;
+    }
+
+    .btn-close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      opacity: 0.6;
+    }
+
+    .btn-close:hover {
+      opacity: 1;
+    }
   `]
 })
 export class PluginViewportComponent implements OnInit, OnChanges {
@@ -467,6 +500,8 @@ export class PluginViewportComponent implements OnInit, OnChanges {
   bundleError: string | null = null;
   hasFrontendBundle = false;
 
+  toggleError: string | null = null;
+
   constructor(
     private pluginElementLoaderService: PluginElementLoaderService,
     private pluginService: PluginService
@@ -478,11 +513,43 @@ export class PluginViewportComponent implements OnInit, OnChanges {
 
   toggleStatusTool(tool: Tool, event: Event): void {
     event.preventDefault();
-    const newStatus = tool.status === 'Active' ? 'Inactive' : 'Active';
-    console.log(`Setting tool '${tool.name}' status to: ${newStatus}`);
-    // TODO: Call PluginService to update tool status
-    // this.pluginService.updateToolStatus(tool.name, newStatus).subscribe(...)
-    tool.status = newStatus as any;
+    
+    // Determine new status: Active -> Disabled, Disabled -> Active, Inactive stays as is
+    let newStatus = tool.status;
+    if (tool.status === ToolStatus.Active) {
+      newStatus = ToolStatus.Disabled;
+    } else if (tool.status === ToolStatus.Disabled) {
+      newStatus = ToolStatus.Active;
+    }
+    
+    const oldStatus = tool.status;
+    
+    // Optimistic UI update
+    tool.status = newStatus;
+    this.toggleError = null;
+    
+    // Call backend to persist the change
+    this.pluginService.updateToolStatus(tool.name, newStatus).subscribe({
+      next: (updatedTool) => {
+        console.log(`✅ Tool '${tool.name}' status updated to: ${newStatus}`);
+        // Update tool with response from backend
+        Object.assign(tool, updatedTool);
+      },
+      error: (error) => {
+        console.error(`❌ Failed to update tool '${tool.name}' status:`, error);
+        
+        // Revert the UI change
+        tool.status = oldStatus;
+        
+        // Show error message
+        this.toggleError = error?.error?.message || `Failed to update ${tool.name} status`;
+        
+        // Auto-clear error after 5 seconds
+        setTimeout(() => {
+          this.toggleError = null;
+        }, 5000);
+      }
+    });
   }
 
   togglePremiumTool(tool: Tool, event: Event): void {
@@ -507,7 +574,11 @@ export class PluginViewportComponent implements OnInit, OnChanges {
     this.toolsLoading = true;
     this.toolsError = null;
 
-    this.pluginService.getPlugins().subscribe({
+    const toolsObservable = this.isAdmin 
+      ? this.pluginService.getPlugins() 
+      : this.pluginService.getActivePlugins();
+
+    toolsObservable.subscribe({
       next: (tools) => {
         this.tools = tools;
         this.toolsLoading = false;
