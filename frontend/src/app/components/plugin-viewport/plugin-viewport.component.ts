@@ -250,7 +250,7 @@ import { environment } from '../../../environments/environment';
     .card-header-content {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       gap: 0.5rem;
       width: 100%;
     }
