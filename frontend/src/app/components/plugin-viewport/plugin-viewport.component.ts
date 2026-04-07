@@ -36,12 +36,46 @@ import { environment } from '../../../environments/environment';
                   <div class="col-12 col-sm-6 col-md-4">
                     <div class="card tool-card h-100" (click)="selectToolFromGrid(tool)" role="button">
                       <div class="card-header">
-                        <h5 class="card-title">
-                          {{ tool.name }}
-                          @if (tool.isPremium) {
-                            <i class="bi bi-star-fill text-warning ms-2"></i>
-                          }
-                        </h5>
+                        <div class="card-header-content">
+                          <div class="card-title-section">
+                            <h5 class="card-title">
+                              {{ tool.name }}
+                              @if (tool.isPremium) {
+                                <i class="bi bi-star-fill text-warning ms-2"></i>
+                              }
+                            </h5>
+                          </div>
+                          <div class="card-actions">
+                            @if (isAdmin) {
+                              <button class="btn status-toggle" 
+                                      [class.active]="tool.status === 'Active'"
+                                      (click)="toggleStatusTool(tool, $event); $event.stopPropagation()"
+                                      [title]="tool.status === 'Active' ? 'Active - Click to disable' : 'Inactive - Click to enable'"
+                                      type="button">
+                                <i class="bi" [ngClass]="tool.status === 'Active' ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
+                              </button>
+                              <div class="dropdown" (click)="$event.stopPropagation()">
+                                <button class="btn btn-sm btn-link dropdown-toggle" type="button" [id]="'toolMenu-' + tool.name" data-bs-toggle="dropdown" aria-expanded="false">
+                                  <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" [attr.aria-labelledby]="'toolMenu-' + tool.name">
+                                  <li>
+                                    <a class="dropdown-item" href="#" (click)="togglePremiumTool(tool, $event)">
+                                      <i class="bi" [ngClass]="tool.isPremium ? 'bi-star' : 'bi-star-fill'"></i>
+                                      {{ tool.isPremium ? 'Remove Premium' : 'Make Premium' }}
+                                    </a>
+                                  </li>
+                                  <li><hr class="dropdown-divider"></li>
+                                  <li>
+                                    <a class="dropdown-item text-danger" href="#" (click)="deleteTool(tool, $event)">
+                                      <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                  </li>
+                                </ul>
+                              </div>
+                            }
+                          </div>
+                        </div>
                       </div>
                       <div class="card-body">
                         <p class="card-text">{{ tool.description || 'No description available' }}</p>
@@ -207,6 +241,89 @@ import { environment } from '../../../environments/environment';
       border-top: 1px solid var(--secondary-color-1);
     }
 
+    .card-header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .card-title-section {
+      flex: 1;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .status-toggle {
+      color: var(--text-color);
+      opacity: 0.4;
+      transition: opacity 0.2s ease;
+      padding: 0.5rem 0.75rem;
+      border: none;
+      background: transparent;
+      font-size: 1.5rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status-toggle i {
+      font-size: 2rem;
+    }
+
+    .status-toggle.active {
+      opacity: 1;
+      color: #28a745;
+    }
+
+    .status-toggle:hover {
+      opacity: 0.7;
+    }
+
+    .status-toggle:hover.active {
+      opacity: 1;
+    }
+
+    .tool-card .btn-link {
+      color: var(--text-color);
+      text-decoration: none;
+      padding: 0;
+      opacity: 0.6;
+      transition: opacity 0.2s ease;
+    }
+
+    .tool-card .btn-link:hover {
+      opacity: 1;
+    }
+
+    .dropdown-menu {
+      background: var(--background-color);
+      border: 1px solid var(--secondary-color-1);
+    }
+
+    .dropdown-menu .dropdown-item {
+      color: var(--text-color);
+    }
+
+    .dropdown-menu .dropdown-item:hover {
+      background-color: var(--secondary-color-1);
+      color: var(--text-color);
+    }
+
+    .dropdown-menu .text-danger {
+      color: #dc3545 !important;
+    }
+
+    .dropdown-menu .text-danger:hover {
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+
     .viewport__header {
       padding: 1rem 0;
       border-bottom: 1px solid var(--secondary-color-1);
@@ -344,6 +461,7 @@ export class PluginViewportComponent implements OnInit, OnChanges {
   tools: Tool[] = [];
   toolsLoading = false;
   toolsError: string | null = null;
+  isAdmin = true; // Hardcoded for testing
 
   bundleLoading = false;
   bundleError: string | null = null;
@@ -356,6 +474,33 @@ export class PluginViewportComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.loadTools();
+  }
+
+  toggleStatusTool(tool: Tool, event: Event): void {
+    event.preventDefault();
+    const newStatus = tool.status === 'Active' ? 'Inactive' : 'Active';
+    console.log(`Setting tool '${tool.name}' status to: ${newStatus}`);
+    // TODO: Call PluginService to update tool status
+    // this.pluginService.updateToolStatus(tool.name, newStatus).subscribe(...)
+    tool.status = newStatus as any;
+  }
+
+  togglePremiumTool(tool: Tool, event: Event): void {
+    event.preventDefault();
+    console.log(`${tool.isPremium ? 'Removing' : 'Making'} premium: ${tool.name}`);
+    // TODO: Call PluginService to toggle premium
+    // this.pluginService.togglePremiumTool(tool.name).subscribe(...)
+    tool.isPremium = !tool.isPremium;
+  }
+
+  deleteTool(tool: Tool, event: Event): void {
+    event.preventDefault();
+    if (confirm(`Are you sure you want to delete "${tool.name}"?`)) {
+      console.log(`Deleting tool: ${tool.name}`);
+      // TODO: Call PluginService to delete tool
+      // this.pluginService.deleteTool(tool.name).subscribe(...)
+      this.tools = this.tools.filter(t => t.name !== tool.name);
+    }
   }
 
   loadTools(): void {
