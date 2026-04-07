@@ -214,18 +214,16 @@ namespace DITT.Host.Controllers
                 // Handle plugin tools: hard delete (unload + delete package)
                 try
                 {
-                    // Unload plugin from memory if it's loaded
+                    // 1. Unload plugin from memory first (releases DLL lock)
+                    // This must happen BEFORE attempting to delete files
                     if (_pluginManager.IsLoaded(name))
                     {
-                        _pluginManager.UnloadPlugin(name);
+                        await _pluginManager.UnloadPluginAsync(name);
                         _logger.LogInformation("Unloaded plugin: {PluginName}", name);
                     }
 
-                    // Unregister the tool
-                    await _registrationService.UnregisterAsync(name);
-                    _logger.LogInformation("Unregistered tool: {ToolName}", name);
-
-                    // Delete associated package if it exists
+                    // 2. Delete associated package if it exists
+                    // Now that the DLL is unloaded, file deletion should succeed
                     if (tool.PackageId.HasValue)
                     {
                         var success = await _packageService.DeletePackageAsync(tool.PackageId.Value);
@@ -234,6 +232,13 @@ namespace DITT.Host.Controllers
                         else
                             _logger.LogWarning("Failed to delete package for tool: {ToolName}", name);
                     }
+
+                    // 3. Delete tool record from database
+                    var deleted = await _registrationService.DeleteAsync(name);
+                    if (deleted)
+                        _logger.LogInformation("Deleted tool from database: {ToolName}", name);
+                    else
+                        _logger.LogWarning("Failed to delete tool from database: {ToolName}", name);
                 }
                 catch (Exception ex)
                 {

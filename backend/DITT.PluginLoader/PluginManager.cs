@@ -101,6 +101,41 @@ namespace DITT.PluginLoader
             }
         }
 
+        public async Task UnloadPluginAsync(string name)
+        {
+            lock (_lock)
+            {
+                if (!_plugins.TryGetValue(name, out var plugin))
+                {
+                    _logger.LogWarning("Plugin not found for unload: {Name}", name);
+                    return;
+                }
+
+                if (plugin.IsBuiltIn)
+                {
+                    _logger.LogWarning("Cannot unload built-in plugin: {Name}", name);
+                    return;
+                }
+
+                _plugins.Remove(name);
+                // Unload the AssemblyLoadContext to free resources
+                plugin.LoadContext?.Unload();
+                _logger.LogInformation("Plugin unloaded: {Name}", name);
+            }
+
+            // Force garbage collection to release file handles (DLL locks)
+            // Do this outside the lock to allow other operations to proceed
+            await Task.Run(() =>
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            });
+
+            // Allow time for Windows to release file locks after GC
+            await Task.Delay(500);
+        }
+
         public void RegisterBuiltInTools()
         {
             // Scan the HOST assembly for IToolPlugin implementations

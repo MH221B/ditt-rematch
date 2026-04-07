@@ -111,9 +111,42 @@ public class PackageService : IPackageService
         var package = await _db.PluginPackages.FindAsync(id);
         if (package == null) return false;
 
-        // Delete files
+        // Delete files with retry logic (handles file locks)
         if (Directory.Exists(package.PackagePath))
-            Directory.Delete(package.PackagePath, true);
+        {
+            const int maxRetries = 5;
+            int retryCount = 0;
+            bool deleted = false;
+
+            while (retryCount < maxRetries && !deleted)
+            {
+                try
+                {
+                    Directory.Delete(package.PackagePath, true);
+                    deleted = true;
+                    _logger.LogInformation("Deleted package directory: {PackagePath}", package.PackagePath);
+                }
+                catch (UnauthorizedAccessException) when (retryCount < maxRetries - 1)
+                {
+                    retryCount++;
+                    int delayMs = 100 * (int)Math.Pow(2, retryCount - 1); // Exponential backoff: 100ms, 200ms, 400ms, 800ms, 1600ms
+                    _logger.LogWarning("Package delete failed, retrying in {DelayMs}ms (attempt {Attempt}/{Max}): {PackagePath}", delayMs, retryCount, maxRetries, package.PackagePath);
+                    await Task.Delay(delayMs);
+                }
+                catch (Exception ex) when (retryCount < maxRetries - 1)
+                {
+                    retryCount++;
+                    _logger.LogWarning(ex, "Unexpected error deleting package, retrying (attempt {Attempt}/{Max}): {PackagePath}", retryCount, maxRetries, package.PackagePath);
+                    await Task.Delay(100);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to delete package after {Attempts} attempts: {PackagePath}", maxRetries, package.PackagePath);
+                    // Continue - mark as deleted in DB even if files couldn't be removed
+                    break;
+                }
+            }
+        }
 
         // Mark as deleted instead of removing (audit trail)
         package.Status = PackageStatus.Deleted;

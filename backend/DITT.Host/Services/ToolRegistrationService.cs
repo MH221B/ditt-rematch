@@ -117,5 +117,20 @@ namespace DITT.Host.Services
             _logger.LogInformation("Updated tool premium status: {Name} from {OldValue} to {NewValue}", name, oldValue, isPremium);
             return tool;
         }
+
+        public async Task<bool> DeleteAsync(string name)
+        {
+            var tool = await _db.Tools.FirstOrDefaultAsync(t => t.Name == name);
+            if (tool == null)
+            {
+                _logger.LogWarning("Attempted to delete non-existent tool: {Name}", name);
+                return false;
+            }
+
+            _db.Tools.Remove(tool);
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Deleted tool from database: {Name}", name);
+            return true;
+        }
     }
 }
