@@ -45,13 +45,15 @@ import { takeUntil, debounceTime } from 'rxjs/operators';
                     class="dropdown-item tool-item"
                     (click)="selectTool($event, tool)"
                   >
-                    <div class="tool-item__name">{{ tool.name }}</div>
-                    <div class="tool-item__description">
-                      {{ tool.description }}
+                    <div class="tool-item__content">
+                      <div class="tool-item__name">{{ tool.name }}</div>
+                      <div class="tool-item__description">
+                        {{ tool.description }}
+                      </div>
                     </div>
                     @if (tool.isPremium) {
                       <i
-                        class="bi bi-star-fill tool-item__premium ms-2"
+                        class="bi bi-star-fill tool-item__premium"
                         title="Premium"
                       ></i>
                     }
@@ -116,40 +118,47 @@ import { takeUntil, debounceTime } from 'rxjs/operators';
         max-height: 400px;
         overflow-y: auto;
         margin-top: 0.25rem;
-        background-color: white;
-        border: 1px solid #dee2e6;
+        background-color: #2d3748;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 0.25rem;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
       }
 
       .tool-item {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         padding: 0.75rem 1rem !important;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         cursor: pointer;
         transition: background-color 0.2s ease;
+        gap: 1rem;
       }
 
       .tool-item:hover {
-        background-color: #f8f9fa;
+        background-color: rgba(255, 255, 255, 0.1);
       }
 
       .tool-item:last-child {
         border-bottom: none;
       }
 
+      .tool-item__content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        flex: 1;
+      }
+
       .tool-item__name {
         font-weight: 500;
-        color: #212529;
+        color: #ffffff;
         font-size: 0.95rem;
       }
 
       .tool-item__description {
         font-size: 0.8rem;
-        color: #6c757d;
-        margin-top: 0.25rem;
+        color: #a0aec0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -158,6 +167,8 @@ import { takeUntil, debounceTime } from 'rxjs/operators';
       .tool-item__premium {
         color: #ffc107;
         font-size: 0.9rem;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
       }
 
       @media (max-width: 768px) {
