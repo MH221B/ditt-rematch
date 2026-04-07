@@ -15,23 +15,18 @@ import { Tool } from '../../../models/tool.model';
             <!-- Navbar Brand and Offcanvas Toggle Button -->
             <div class="d-flex align-items-center">
               <!-- Menu Icon Button -->
-              @if (!isAdmin) {
-                <button class="btn btn-outline-light me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu">
-                  <i class="bi bi-list fs-2"></i>
-                </button>
-              }
+              <button class="btn btn-outline-light me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu">
+                <i class="bi bi-list fs-2"></i>
+              </button>
 
               <!-- Navbar Brand -->
               <a class="navbar-brand" [href]="isAdmin ? '/admin' : '/'">DITT</a>
 
               <!-- Nav Links -->
               <ul class="navbar-nav">
-                <li class="nav-item">
-                  <a class="nav-link" href="/upload">Upload</a>
-                </li>
-                @if (isAdmin) {
+                @if (!isAdmin) {
                   <li class="nav-item">
-                    <a class="nav-link" href="/admin/manage-request">Manage Requests</a>
+                    <a class="nav-link" href="/upload">Upload</a>
                   </li>
                 }
               </ul>
@@ -49,13 +44,11 @@ import { Tool } from '../../../models/tool.model';
             <!-- Dynamic User Dropdown or Login/Signup Buttons -->
             <div class="ms-auto d-flex align-items-center">
               <!-- Search Dropdown -->
-              @if (!isAdmin) {
-                <app-search-dropdown
-                  [isAdmin]="isAdmin"
-                  (toolSelected)="onToolSelected($event)"
-                  class="me-3"
-                ></app-search-dropdown>
-              }
+              <app-search-dropdown
+                [isAdmin]="isAdmin"
+                (toolSelected)="onToolSelected($event)"
+                class="me-3"
+              ></app-search-dropdown>
               @if (isLoggedIn) {
                 <!-- Dropdown Menu for Logged-In User -->
                 <div class="dropdown">
@@ -95,7 +88,7 @@ export class NavbarComponent {
   // Mock user state (replace with auth service later)
   isLoggedIn = false;
   username = 'User';
-  isAdmin = false;
+  isAdmin = true;
   isPremium = false;
 
   onToolSelected(tool: Tool): void {
