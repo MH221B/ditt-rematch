@@ -1,5 +1,7 @@
-import { Component, Input, OnChanges, OnInit, Output, SimpleChanges, Type, EventEmitter } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, Output, SimpleChanges, Type, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Tool, ToolStatus } from '../../models/tool.model';
 import { PluginElementLoaderService } from '../../services/plugin-element-loader.service';
 import { PluginService } from '../../services/plugin.service';
@@ -487,7 +489,7 @@ import { environment } from '../../../environments/environment';
     }
   `]
 })
-export class PluginViewportComponent implements OnInit, OnChanges {
+export class PluginViewportComponent implements OnInit, OnChanges, OnDestroy {
   @Input() selectedTool: Tool | null = null;
   @Output() toolSelected = new EventEmitter<Tool>();
 
@@ -502,6 +504,8 @@ export class PluginViewportComponent implements OnInit, OnChanges {
 
   toggleError: string | null = null;
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private pluginElementLoaderService: PluginElementLoaderService,
     private pluginService: PluginService
@@ -509,6 +513,11 @@ export class PluginViewportComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.loadTools();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   toggleStatusTool(tool: Tool, event: Event): void {
@@ -529,27 +538,30 @@ export class PluginViewportComponent implements OnInit, OnChanges {
     this.toggleError = null;
     
     // Call backend to persist the change
-    this.pluginService.updateToolStatus(tool.name, newStatus).subscribe({
-      next: (updatedTool) => {
-        console.log(`✅ Tool '${tool.name}' status updated to: ${newStatus}`);
-        // Update tool with response from backend
-        Object.assign(tool, updatedTool);
-      },
-      error: (error) => {
-        console.error(`❌ Failed to update tool '${tool.name}' status:`, error);
-        
-        // Revert the UI change
-        tool.status = oldStatus;
-        
-        // Show error message
-        this.toggleError = error?.error?.message || `Failed to update ${tool.name} status`;
-        
-        // Auto-clear error after 5 seconds
-        setTimeout(() => {
-          this.toggleError = null;
-        }, 5000);
-      }
-    });
+    // PluginService.updateToolStatus() will automatically update the shared cache
+    this.pluginService.updateToolStatus(tool.name, newStatus)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedTool) => {
+          console.log(`✅ Tool '${tool.name}' status updated to: ${newStatus}`);
+          // Cache is already updated by PluginService, but update local reference too
+          Object.assign(tool, updatedTool);
+        },
+        error: (error) => {
+          console.error(`❌ Failed to update tool '${tool.name}' status:`, error);
+          
+          // Revert the UI change
+          tool.status = oldStatus;
+          
+          // Show error message
+          this.toggleError = error?.error?.message || `Failed to update ${tool.name} status`;
+          
+          // Auto-clear error after 5 seconds
+          setTimeout(() => {
+            this.toggleError = null;
+          }, 5000);
+        }
+      });
   }
 
   togglePremiumTool(tool: Tool, event: Event): void {
@@ -563,27 +575,30 @@ export class PluginViewportComponent implements OnInit, OnChanges {
     this.toggleError = null;
     
     // Call backend to persist the change
-    this.pluginService.updateToolPremium(tool.name, newPremiumValue).subscribe({
-      next: (updatedTool) => {
-        console.log(`✅ Tool '${tool.name}' premium status updated to: ${newPremiumValue}`);
-        // Update tool with response from backend
-        Object.assign(tool, updatedTool);
-      },
-      error: (error) => {
-        console.error(`❌ Failed to update tool '${tool.name}' premium status:`, error);
-        
-        // Revert the UI change
-        tool.isPremium = oldPremiumValue;
-        
-        // Show error message
-        this.toggleError = error?.error?.message || `Failed to update ${tool.name} premium status`;
-        
-        // Auto-clear error after 5 seconds
-        setTimeout(() => {
-          this.toggleError = null;
-        }, 5000);
-      }
-    });
+    // PluginService.updateToolPremium() will automatically update the shared cache
+    this.pluginService.updateToolPremium(tool.name, newPremiumValue)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedTool) => {
+          console.log(`✅ Tool '${tool.name}' premium status updated to: ${newPremiumValue}`);
+          // Cache is already updated by PluginService, but update local reference too
+          Object.assign(tool, updatedTool);
+        },
+        error: (error) => {
+          console.error(`❌ Failed to update tool '${tool.name}' premium status:`, error);
+          
+          // Revert the UI change
+          tool.isPremium = oldPremiumValue;
+          
+          // Show error message
+          this.toggleError = error?.error?.message || `Failed to update ${tool.name} premium status`;
+          
+          // Auto-clear error after 5 seconds
+          setTimeout(() => {
+            this.toggleError = null;
+          }, 5000);
+        }
+      });
   }
 
   deleteTool(tool: Tool, event: Event): void {
@@ -604,17 +619,20 @@ export class PluginViewportComponent implements OnInit, OnChanges {
       ? this.pluginService.getPlugins() 
       : this.pluginService.getActivePlugins();
 
-    toolsObservable.subscribe({
-      next: (tools) => {
-        this.tools = tools;
-        this.toolsLoading = false;
-      },
-      error: (error) => {
-        console.error('Failed to load tools:', error);
-        this.toolsError = error?.error?.message || 'Failed to load tools';
-        this.toolsLoading = false;
-      }
-    });
+    // Subscribe to shared state - will get cached value and all future updates from any component
+    toolsObservable
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (tools) => {
+          this.tools = tools;
+          this.toolsLoading = false;
+        },
+        error: (error) => {
+          console.error('Failed to load tools:', error);
+          this.toolsError = error?.error?.message || 'Failed to load tools';
+          this.toolsLoading = false;
+        }
+      });
   }
 
   selectToolFromGrid(tool: Tool): void {

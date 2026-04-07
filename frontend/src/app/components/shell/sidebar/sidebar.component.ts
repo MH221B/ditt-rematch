@@ -1,6 +1,8 @@
 // frontend/DITT/src/app/components/shell/sidebar/sidebar.component.ts
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { PluginService } from '../../../services/plugin.service';
 import { Tool, ToolStatus } from '../../../models/tool.model';
 
@@ -37,7 +39,7 @@ import { Tool, ToolStatus } from '../../../models/tool.model';
           <ul class="list-unstyled">
             @for (tool of tools; track tool.name) {
               <li class="mb-2">
-                <a href="#" class="d-flex align-items-center justify-content-between text-decoration-none tool-item" (click)="selectTool(tool)">
+                <a href="#" class="d-flex align-items-center justify-content-between text-decoration-none tool-item" (click)="selectTool(tool); $event.preventDefault()">
                   <span class="tool-name">{{ tool.name }}</span>
                   @if (tool.isPremium) {
                     <i class="bi bi-star-fill text-warning ms-2"></i>
@@ -52,12 +54,14 @@ import { Tool, ToolStatus } from '../../../models/tool.model';
     </div>
   `
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   @Output() toolSelected = new EventEmitter<Tool>();
 
   tools: Tool[] = [];
   loading = false;
   error = false;
+
+  private destroy$ = new Subject<void>();
 
   constructor(private pluginService: PluginService) {}
 
@@ -65,20 +69,29 @@ export class SidebarComponent implements OnInit {
     this.loadTools();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadTools(): void {
     this.loading = true;
     this.error = false;
 
-    this.pluginService.getPlugins().subscribe({
-      next: (tools) => {
-        this.tools = tools;
-        this.loading = false;
-      },
-      error: () => {
-        this.error = true;
-        this.loading = false;
-      }
-    });
+    // Subscribe to shared state - will get cached value and all future updates
+    this.pluginService
+      .getPlugins()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (tools) => {
+          this.tools = tools;
+          this.loading = false;
+        },
+        error: () => {
+          this.error = true;
+          this.loading = false;
+        }
+      });
   }
 
   selectTool(tool: Tool): void {
