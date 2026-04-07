@@ -1,7 +1,8 @@
-import { Component, Input, OnChanges, SimpleChanges, Type } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, Output, SimpleChanges, Type, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Tool } from '../../models/tool.model';
 import { PluginElementLoaderService } from '../../services/plugin-element-loader.service';
+import { PluginService } from '../../services/plugin.service';
 import { JsonMinifyComponent } from '../../tools/json-minify/json-minify.component';
 import { environment } from '../../../environments/environment';
 
@@ -13,8 +14,47 @@ import { environment } from '../../../environments/environment';
     <div class="viewport">
       @if (!selectedTool) {
         <div class="viewport__empty">
-          <h2>Select a tool from the sidebar</h2>
-          <p>Choose a tool to get started</p>
+          @if (toolsLoading) {
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Loading tools...</p>
+            </div>
+          } @else if (toolsError) {
+            <div class="error-state">
+              <p class="error-title">Failed to load tools</p>
+              <button class="btn btn-outline-primary mt-3" (click)="loadTools()">Retry</button>
+            </div>
+          } @else if (tools.length === 0) {
+            <div class="empty-tools-state">
+              <p>No tools available</p>
+            </div>
+          } @else {
+            <div class="tools-grid-container">
+              <h2 class="tools-grid-title">Available Tools</h2>
+              <div class="row g-3">
+                @for (tool of tools; track tool.name) {
+                  <div class="col-12 col-sm-6 col-md-4">
+                    <div class="card tool-card h-100" (click)="selectToolFromGrid(tool)" role="button">
+                      <div class="card-header">
+                        <h5 class="card-title">
+                          {{ tool.name }}
+                          @if (tool.isPremium) {
+                            <i class="bi bi-star-fill text-warning ms-2"></i>
+                          }
+                        </h5>
+                      </div>
+                      <div class="card-body">
+                        <p class="card-text">{{ tool.description || 'No description available' }}</p>
+                      </div>
+                      <div class="card-footer bg-transparent">
+                        <span class="badge bg-secondary">v{{ tool.version }}</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
       } @else {
         <div class="viewport__header">
@@ -86,6 +126,85 @@ import { environment } from '../../../environments/environment';
       justify-content: center;
       height: 100%;
       color: var(--text-color);
+      padding: 2rem;
+    }
+
+    .loading-state,
+    .error-state,
+    .empty-tools-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .error-title {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .tools-grid-container {
+      width: 100%;
+      padding: 2rem;
+    }
+
+    .tools-grid-title {
+      margin-bottom: 1.5rem;
+      color: var(--text-color);
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .tool-card {
+      cursor: pointer;
+      border: 1px solid var(--secondary-color-1);
+      background: var(--background-color);
+      color: var(--text-color);
+      transition: all 0.3s ease;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-color: var(--primary-color, #0d6efd);
+    }
+
+    .tool-card .card-header {
+      background: transparent;
+      border-bottom: 1px solid var(--secondary-color-1);
+      padding: 0.75rem 1rem;
+    }
+
+    .tool-card .card-title {
+      margin: 0;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tool-card .card-body {
+      padding: 1rem;
+      flex-grow: 1;
+    }
+
+    .tool-card .card-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 2.8em;
+      color: var(--text-color);
+      opacity: 0.85;
+    }
+
+    .tool-card .card-footer {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--secondary-color-1);
     }
 
     .viewport__header {
@@ -218,14 +337,47 @@ import { environment } from '../../../environments/environment';
     }
   `]
 })
-export class PluginViewportComponent implements OnChanges {
+export class PluginViewportComponent implements OnInit, OnChanges {
   @Input() selectedTool: Tool | null = null;
+  @Output() toolSelected = new EventEmitter<Tool>();
+
+  tools: Tool[] = [];
+  toolsLoading = false;
+  toolsError: string | null = null;
 
   bundleLoading = false;
   bundleError: string | null = null;
   hasFrontendBundle = false;
 
-  constructor(private pluginElementLoaderService: PluginElementLoaderService) {}
+  constructor(
+    private pluginElementLoaderService: PluginElementLoaderService,
+    private pluginService: PluginService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadTools();
+  }
+
+  loadTools(): void {
+    this.toolsLoading = true;
+    this.toolsError = null;
+
+    this.pluginService.getPlugins().subscribe({
+      next: (tools) => {
+        this.tools = tools;
+        this.toolsLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load tools:', error);
+        this.toolsError = error?.error?.message || 'Failed to load tools';
+        this.toolsLoading = false;
+      }
+    });
+  }
+
+  selectToolFromGrid(tool: Tool): void {
+    this.toolSelected.emit(tool);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedTool'] && this.selectedTool) {

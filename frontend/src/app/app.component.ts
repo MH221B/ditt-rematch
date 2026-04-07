@@ -20,7 +20,7 @@ import { filter } from 'rxjs/operators';
         <app-sidebar (toolSelected)="onToolSelected($event)" />
         @if (isHomePage) {
           <main class="app-content">
-            <app-plugin-viewport [selectedTool]="selectedTool" />
+            <app-plugin-viewport [selectedTool]="selectedTool" (toolSelected)="onToolSelected($event)" />
           </main>
         } @else {
           <!-- For other pages like upload, just show the routed content -->
