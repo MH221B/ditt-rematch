@@ -14,7 +14,7 @@ import { filter } from 'rxjs/operators';
   imports: [CommonModule, RouterModule, NavbarComponent, SidebarComponent, PluginViewportComponent, FooterComponent],
   template: `
     <div class="app-shell">
-      <app-navbar />
+      <app-navbar (toolSelected)="onToolSelected($event)" />
       <div class="app-body">
         <!-- Sidebar available on all routes -->
         <app-sidebar (toolSelected)="onToolSelected($event)" />

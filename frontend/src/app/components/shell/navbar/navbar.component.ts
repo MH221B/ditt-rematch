@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SearchDropdownComponent } from '../search-dropdown/search-dropdown.component';
+import { Tool } from '../../../models/tool.model';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SearchDropdownComponent],
   template: `
     <header class="p-1 navbar-bg">
       <div class="container p-0">
@@ -44,11 +46,12 @@ import { CommonModule } from '@angular/common';
               }
             </div>
 
-            <!-- Search Button -->
+            <!-- Search Dropdown -->
             @if (!isAdmin) {
-              <button class="btn btn-outline-light search-button" data-bs-toggle="modal" data-bs-target="#searchModal">
-                <i class="bi bi-search"></i> Search for a tool
-              </button>
+              <app-search-dropdown
+                [isAdmin]="isAdmin"
+                (toolSelected)="onToolSelected($event)"
+              ></app-search-dropdown>
             }
 
             <!-- Dynamic User Dropdown or Login/Signup Buttons -->
@@ -87,11 +90,17 @@ import { CommonModule } from '@angular/common';
   `
 })
 export class NavbarComponent {
+  @Output() toolSelected = new EventEmitter<Tool>();
+
   // Mock user state (replace with auth service later)
   isLoggedIn = false;
   username = 'User';
   isAdmin = false;
   isPremium = false;
+
+  onToolSelected(tool: Tool): void {
+    this.toolSelected.emit(tool);
+  }
 
   setPremium(): void {
     console.log('Premium subscription feature not yet implemented');
