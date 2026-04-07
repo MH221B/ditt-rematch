@@ -11,10 +11,9 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [CommonModule, JsonMinifyComponent],
   template: `
-    <div class="container">
-      <div class="viewport">
-        @if (!selectedTool) {
-        <div class="viewport__empty">
+    <div class="viewport">
+      @if (!selectedTool) {
+        <div class="viewport__empty container">
           @if (toggleError) {
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
               {{ toggleError }}
@@ -151,7 +150,6 @@ import { environment } from '../../../environments/environment';
           }
         </div>
       }
-      </div>
     </div>
   `,
   styles: [`
