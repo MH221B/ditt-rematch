@@ -142,15 +142,16 @@ public class PackageService : IPackageService
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to delete package after {Attempts} attempts: {PackagePath}", maxRetries, package.PackagePath);
-                    // Continue - mark as deleted in DB even if files couldn't be removed
+                    // Continue - remove from DB even if files couldn't be removed
                     break;
                 }
             }
         }
 
-        // Mark as deleted instead of removing (audit trail)
-        package.Status = PackageStatus.Deleted;
+        // Delete package record from database
+        _db.PluginPackages.Remove(package);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("Deleted PluginPackage record from database: {PackageName} v{Version}", package.Name, package.Version);
 
         return true;
     }

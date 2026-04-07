@@ -88,7 +88,7 @@ export class NavbarComponent {
   // Mock user state (replace with auth service later)
   isLoggedIn = false;
   username = 'User';
-  isAdmin = true;
+  isAdmin = false;
   isPremium = false;
 
   onToolSelected(tool: Tool): void {
