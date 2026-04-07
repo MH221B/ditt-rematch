@@ -11,8 +11,9 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [CommonModule, JsonMinifyComponent],
   template: `
-    <div class="viewport">
-      @if (!selectedTool) {
+    <div class="container">
+      <div class="viewport">
+        @if (!selectedTool) {
         <div class="viewport__empty">
           @if (toggleError) {
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -35,7 +36,7 @@ import { environment } from '../../../environments/environment';
               <p>No tools available</p>
             </div>
           } @else {
-            <div class="tools-grid-container">
+            <div class="tools-grid-container p-0">
               <h2 class="tools-grid-title">Available Tools</h2>
               <div class="row g-3">
                 @for (tool of tools; track tool.name) {
@@ -150,6 +151,7 @@ import { environment } from '../../../environments/environment';
           }
         </div>
       }
+      </div>
     </div>
   `,
   styles: [`
@@ -166,7 +168,7 @@ import { environment } from '../../../environments/environment';
       justify-content: center;
       height: 100%;
       color: var(--text-color);
-      padding: 2rem;
+      padding: 2rem 0rem;
     }
 
     .loading-state,
