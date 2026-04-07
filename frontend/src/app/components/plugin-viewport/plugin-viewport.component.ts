@@ -1,13 +1,14 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, Type } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Tool } from '../../models/tool.model';
 import { PluginElementLoaderService } from '../../services/plugin-element-loader.service';
+import { JsonMinifyComponent } from '../../tools/json-minify/json-minify.component';
 import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-plugin-viewport',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, JsonMinifyComponent],
   template: `
     <div class="viewport">
       @if (!selectedTool) {
@@ -29,26 +30,43 @@ import { environment } from '../../../environments/environment';
           </div>
         </div>
         <div class="viewport__content">
-          @if (bundleLoading) {
-            <div class="loading-spinner">
-              <div class="spinner"></div>
-              <p>Loading {{ selectedTool.name }}...</p>
-            </div>
-          } @else if (bundleError) {
-            <div class="error-message">
-              <p class="error-title">Failed to load plugin UI</p>
-              <p class="error-text">{{ bundleError }}</p>
-              <p class="hint">The plugin backend is available, but the frontend UI could not be loaded.</p>
-            </div>
-          } @else if (hasFrontendBundle) {
-            <!-- Web component will render here after bundle loads -->
-            <div class="web-component-host" [id]="'plugin-' + selectedTool.name.toLowerCase()"></div>
+          @if (selectedTool.isBuiltIn) {
+            <!-- Built-in tools: render component directly -->
+            @switch (selectedTool.name) {
+              @case ('JsonMinify') {
+                <tool-json-minify></tool-json-minify>
+              }
+              @default {
+                <!-- Fallback for built-in tools without UI -->
+                <div class="tool-placeholder">
+                  <p>{{ selectedTool.description }}</p>
+                  <p class="hint">This tool is not yet implemented</p>
+                </div>
+              }
+            }
           } @else {
-            <!-- Fallback for tools without frontend bundles (API-only mode) -->
-            <div class="tool-placeholder">
-              <p>{{ selectedTool.description }}</p>
-              <p class="hint">This tool operates in API-only mode</p>
-            </div>
+            <!-- Plugin tools: load from bundle -->
+            @if (bundleLoading) {
+              <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading {{ selectedTool.name }}...</p>
+              </div>
+            } @else if (bundleError) {
+              <div class="error-message">
+                <p class="error-title">Failed to load plugin UI</p>
+                <p class="error-text">{{ bundleError }}</p>
+                <p class="hint">The plugin backend is available, but the frontend UI could not be loaded.</p>
+              </div>
+            } @else if (hasFrontendBundle) {
+              <!-- Web component will render here after bundle loads -->
+              <div class="web-component-host" [id]="'plugin-' + selectedTool.name.toLowerCase()"></div>
+            } @else {
+              <!-- Fallback for plugins without frontend bundles (API-only mode) -->
+              <div class="tool-placeholder">
+                <p>{{ selectedTool.description }}</p>
+                <p class="hint">This tool operates in API-only mode</p>
+              </div>
+            }
           }
         </div>
       }
@@ -211,7 +229,10 @@ export class PluginViewportComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedTool'] && this.selectedTool) {
-      this.loadBundle();
+      // Skip bundle loading for built-in tools (they're rendered directly)
+      if (!this.selectedTool.isBuiltIn) {
+        this.loadBundle();
+      }
     }
   }
 
