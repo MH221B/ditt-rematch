@@ -10,6 +10,7 @@ using DITT.Core.Models;
 using Microsoft.AspNetCore.Http.Features;
 using System.Reflection;
 using DITT.SDK;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,11 @@ if (File.Exists(".env"))
     Env.Load(".env");
 }
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddOpenApi();
 
 // Build connection string from environment variables
