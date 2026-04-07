@@ -134,6 +134,7 @@ import { ToolService } from '../../services/tool.service';
 
     .tool-title {
       margin-bottom: 0.5rem !important;
+      color: var(--bs-text-color);
     }
 
     .tool-description {

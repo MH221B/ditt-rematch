@@ -55,14 +55,38 @@ public class JsonMinifyTool : ToolPluginBase
         try
         {
             using var reader = new StreamReader(context.Request.Body);
-            var jsonInput = await reader.ReadToEndAsync();
+            var requestBody = await reader.ReadToEndAsync();
+
+            if (string.IsNullOrWhiteSpace(requestBody))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    Message = "Request body is empty. Please provide valid JSON."
+                });
+                return;
+            }
+
+            // Parse the request body to extract rawJson field
+            using var requestDocument = JsonDocument.Parse(requestBody);
+            if (!requestDocument.RootElement.TryGetProperty("rawJson", out var rawJsonElement))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    Message = "Request body must contain 'rawJson' field"
+                });
+                return;
+            }
+
+            var jsonInput = rawJsonElement.GetString();
 
             if (string.IsNullOrWhiteSpace(jsonInput))
             {
                 context.Response.StatusCode = 400;
                 await context.Response.WriteAsJsonAsync(new
                 {
-                    Message = "Request body is empty. Please provide valid JSON."
+                    Message = "rawJson field is empty. Please provide valid JSON."
                 });
                 return;
             }
