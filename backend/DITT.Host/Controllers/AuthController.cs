@@ -33,4 +33,16 @@ public class AuthController : ControllerBase
 
         return Ok(new { token = response.Token, user = response.User, expiresIn = response.ExpiresIn });
     }
+
+    [HttpGet("profile")]
+    [Authorize]
+    public async Task<IActionResult> GetProfile()
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "User ID not found in claims" });
+
+        var user = await _authService.GetUserByIdAsync(userId);
+        return Ok(user);
+    }
 }
