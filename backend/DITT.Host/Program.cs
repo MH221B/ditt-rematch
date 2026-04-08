@@ -52,7 +52,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Identity configuration
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+builder.Services.AddIdentityCore<IdentityUser>(options =>
 {
     options.Password.RequiredLength = 8;
     options.Password.RequireDigit = true;
@@ -61,6 +61,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Password.RequireLowercase = true;
     options.User.RequireUniqueEmail = true;
 })
+.AddRoles<IdentityRole>() // You must explicitly add roles when using IdentityCore
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
@@ -71,7 +72,13 @@ if (string.IsNullOrEmpty(jwtKey))
     throw new InvalidOperationException("JWT_KEY environment variable is not set. Check your .env file.");
 }
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(
+    options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
