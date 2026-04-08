@@ -96,6 +96,8 @@ builder.Services.AddSingleton(sp =>
 
 builder.Services.AddScoped<IToolRegistrationService, ToolRegistrationService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Configure built-in plugins' services before building the app
 var builtInTypes = Assembly.GetEntryAssembly()!

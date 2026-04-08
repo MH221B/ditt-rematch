@@ -4,9 +4,11 @@ using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
+using DITT.Host.Services.Interfaces;
+
 namespace DITT.Host.Services;
 
-public class TokenService
+public class TokenService : ITokenService
 {
     private readonly IConfiguration _config;
 
