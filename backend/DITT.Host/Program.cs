@@ -24,6 +24,9 @@ if (File.Exists(".env"))
     Env.Load(".env");
 }
 
+// Add environment variables to configuration
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
