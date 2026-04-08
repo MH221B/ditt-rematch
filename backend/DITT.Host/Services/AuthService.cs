@@ -74,4 +74,46 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<AuthResponse> LoginAsync(AuthRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Error: Invalid email!"
+            };
+        }
+
+        var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+        if (!isPasswordValid)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Error: Invalid password!"
+            };
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var token = _tokenService.GenerateToken(user, roles.ToList());
+
+        _logger.LogInformation("User logged in: {Email}", request.Email);
+
+        return new AuthResponse
+        {
+            Success = true,
+            Message = "Login successful",
+            Token = token,
+            ExpiresIn = 1440, // 24 hours in minutes
+            User = new UserDTO
+            {
+                UserId = user.Id,
+                Email = user.Email ?? string.Empty,
+                Roles = roles.ToList()
+            }
+        };
+    }
+
 }
