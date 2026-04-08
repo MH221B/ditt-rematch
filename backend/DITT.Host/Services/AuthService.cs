@@ -116,4 +116,17 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<UserDTO?> GetUserByIdAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return null;
+        var roles = await _userManager.GetRolesAsync(user);
+        return new UserDTO
+        {
+            UserId = user.Id,
+            Email = user.Email ?? string.Empty,
+            Roles = roles.ToList()
+        };
+    } 
 }
