@@ -40,6 +40,7 @@ packages/
 *.db-wal
 
 # Local settings
+appsettings.json
 appsettings.*.json
 appsettings.local.json
 
