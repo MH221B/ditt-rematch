@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToolService } from '../../services/tool.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'tool-json-minify',
@@ -368,7 +369,12 @@ export class JsonMinifyComponent {
     }
 
     navigator.clipboard.writeText(this.minifiedJsonOutput).catch(() => {
-      alert('Failed to copy to clipboard');
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to copy to clipboard',
+        icon: 'error'
+      });
     });
+
   }
 }

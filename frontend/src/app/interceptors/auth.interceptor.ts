@@ -10,6 +10,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -37,8 +38,12 @@ export class AuthInterceptor implements HttpInterceptor {
           // Clear auth state
           this.authService.clearAuth();
 
-          // Show error message (using simple alert for MVP, can upgrade to toast/snackbar)
-          alert('Session expired. Please login again.');
+          // Show error message (using SweetAlert for better UX)
+          Swal.fire({
+            title: 'Session Expired',
+            text: 'Please login again.',
+            icon: 'warning'
+          });
 
           // Redirect to login
           this.router.navigate(['/login']);

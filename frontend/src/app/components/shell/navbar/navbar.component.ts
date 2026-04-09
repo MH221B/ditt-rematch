@@ -6,6 +6,7 @@ import { Tool } from '../../../models/tool.model';
 import { AuthService } from '../../../services/auth.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-navbar',
@@ -164,7 +165,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
           this.authService.clearAuth();
 
           // Show success message
-          alert('Logged out successfully');
+          Swal.fire({
+            title: 'Success',
+            text: 'Logged out successfully',
+            icon: 'success'
+          });
 
           // Redirect to login
           this.router.navigate(['/login']);
@@ -173,7 +178,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
           this.isLoggingOut = false;
           // Still clear auth state even if logout fails on backend
           this.authService.clearAuth();
-          alert('Logout complete (backend error, but local session cleared)');
+          Swal.fire({
+            title: 'Notice',
+            text: 'Logout complete (backend error, but local session cleared)',
+            icon: 'info'
+          });
           this.router.navigate(['/login']);
         },
         complete: () => {
