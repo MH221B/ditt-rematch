@@ -23,7 +23,7 @@ public class AuthController : ControllerBase
         if (!response.Success)
             return BadRequest(new { message = response.Message });
 
-        return Ok(new { token = response.Token });
+        return Ok(new { token = response.Token, user = response.User, expiresIn = response.ExpiresIn });
     }
 
     [HttpPost("login")]

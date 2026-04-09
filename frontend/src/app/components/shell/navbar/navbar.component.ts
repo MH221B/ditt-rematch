@@ -111,7 +111,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Initial state update
     this.updateAuthState();
+
+    // Subscribe to auth state changes
+    this.authService.userChanged
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.updateAuthState();
+      });
   }
 
   ngOnDestroy(): void {
@@ -123,7 +131,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.isLoggedIn = this.authService.isAuthenticated();
     if (this.isLoggedIn) {
       this.username = this.authService.getUserEmail() || 'User';
-      // Can add support for admin/premium roles here based on user.roles
+      
+      // Extract admin/premium roles from user
+      const roles = this.authService.getUserRoles();
+      this.isAdmin = roles.includes('Admin');
+      this.isPremium = roles.includes('Premium');
+    } else {
+      this.username = 'User';
+      this.isAdmin = false;
+      this.isPremium = false;
     }
   }
 

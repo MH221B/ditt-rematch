@@ -13,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
       <div class="register-card">
         <h2>Register</h2>
 
-        @if (errorMessage) {
+        @if (isSubmitted && errorMessage) {
           <div class="alert alert-danger" role="alert">
             {{ errorMessage }}
           </div>
@@ -46,9 +46,6 @@ import { AuthService } from '../../services/auth.service';
               [disabled]="isLoading"
               required
             />
-            <small class="form-text text-muted">
-              Password must be at least 8 characters, contain uppercase, lowercase, digits, and special characters.
-            </small>
           </div>
 
           <div class="form-group">
@@ -208,6 +205,7 @@ import { AuthService } from '../../services/auth.service';
       text-align: center;
       margin-top: 20px;
       font-size: 14px;
+      color: var(--text-color);
     }
 
     .login-link a {
@@ -227,6 +225,7 @@ export class RegisterComponent {
   confirmPassword: string = '';
   errorMessage: string = '';
   isLoading: boolean = false;
+  isSubmitted: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -235,6 +234,8 @@ export class RegisterComponent {
 
   onSubmit(): void {
     // Validation
+    this.isSubmitted = true;
+
     if (!this.email || !this.password || !this.confirmPassword) {
       this.errorMessage = 'Please fill in all fields';
       return;
@@ -255,11 +256,13 @@ export class RegisterComponent {
 
     this.authService.register(this.email, this.password).subscribe({
       next: (response) => {
-        // Store token and auto-login
+        // Store token and user info
         this.authService.setToken(response.token);
-        
-        // Fetch user profile to store user info (alternatively, backend could return user in register response)
-        // For now, we'll just navigate to home and the navbar will fetch profile if needed
+        if (response.user) {
+          this.authService.setCurrentUser(response.user);
+        }
+
+        // Navigate to home
         this.router.navigate(['/']);
       },
       error: (error) => {

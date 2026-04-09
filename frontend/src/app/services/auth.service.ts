@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { AuthRequest, User } from '../models/auth.model';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,11 +12,18 @@ export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/api/auth`;
   private readonly tokenKey = 'auth_token';
   private readonly userKey = 'user_info';
+  private userChanged$: BehaviorSubject<User | null>;
+  public userChanged: Observable<User | null>;
 
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {}
+  ) {
+    // Initialize with currently logged-in user from localStorage
+    const currentUser = this.getCurrentUser();
+    this.userChanged$ = new BehaviorSubject<User | null>(currentUser);
+    this.userChanged = this.userChanged$.asObservable();
+  }
 
   /**
    * Login with email and password
@@ -60,6 +67,7 @@ export class AuthService {
    */
   setCurrentUser(user: User): void {
     localStorage.setItem(this.userKey, JSON.stringify(user));
+    this.userChanged$.next(user);
   }
 
   /**
@@ -100,6 +108,7 @@ export class AuthService {
   clearAuth(): void {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
+    this.userChanged$.next(null);
   }
 
   /**
