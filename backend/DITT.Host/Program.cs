@@ -166,6 +166,32 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
+    // Seed admin account
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    var adminEmail = "admin@ditt.local";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    
+    if (adminUser == null)
+    {
+        var newAdminUser = new IdentityUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            EmailConfirmed = true
+        };
+        
+        var result = await userManager.CreateAsync(newAdminUser, "Admin@123");
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(newAdminUser, "Admin");
+            Console.WriteLine("✅ Admin account created: admin / Admin@123");
+        }
+        else
+        {
+            Console.WriteLine($"⚠️ Failed to create admin account: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+        }
+    }
+
     var pluginManager = app.Services.GetRequiredService<PluginManager>();
     pluginManager.RegisterBuiltInTools();
 
