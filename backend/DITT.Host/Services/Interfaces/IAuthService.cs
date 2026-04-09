@@ -7,4 +7,6 @@ public interface IAuthService
     Task<AuthResponse> RegisterAsync(AuthRequest request);
     Task<AuthResponse> LoginAsync(AuthRequest request);
     Task<UserDTO?> GetUserByIdAsync(string userId);
+    Task<AuthResponse> LogoutAsync(string userId);
+    bool IsTokenExpired(string token);
 }

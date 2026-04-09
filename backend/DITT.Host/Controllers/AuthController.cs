@@ -2,7 +2,6 @@ using DITT.Core.Models;
 using DITT.Host.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -35,6 +34,23 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = response.Message });
 
         return Ok(new { token = response.Token, user = response.User, expiresIn = response.ExpiresIn });
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "User ID not found in claims" });
+        }
+
+        var response = await _authService.LogoutAsync(userId);
+        if (!response.Success)
+            return BadRequest(new { message = response.Message });
+
+        return Ok(new { message = response.Message });
     }
 
     [Authorize]

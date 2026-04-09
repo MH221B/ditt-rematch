@@ -1,6 +1,7 @@
 using DITT.Core.Models;
 using DITT.Host.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace DITT.Host.Services;
 
@@ -129,4 +130,37 @@ public class AuthService : IAuthService
             Roles = roles.ToList()
         };
     } 
+
+    public async Task<AuthResponse> LogoutAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "User not found!"
+            };
+        }
+        _logger.LogInformation("User logged out: {Email}", user.Email);
+        return new AuthResponse
+        {
+            Success = true,
+            Message = "Logged out successfully"
+        };
+    }
+
+    public bool IsTokenExpired(string token)
+    {
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+            return jwtToken?.ValidTo < DateTime.UtcNow;
+        }
+        catch
+        {
+            return true;
+        }
+    }
 }
