@@ -84,6 +84,11 @@ namespace DITT.Host.Services
             return await _db.Tools.Where(t => t.Status == status).OrderBy(t => t.Name).ToListAsync();
         }
 
+        public async Task<Tool?> GetByNameAsync(string name)
+        {
+            return await _db.Tools.FirstOrDefaultAsync(t => t.Name == name);
+        }
+
         public async Task<Tool?> UpdateToolStatusAsync(string name, ToolStatus newStatus)
         {
             var tool = await _db.Tools.FirstOrDefaultAsync(t => t.Name == name);

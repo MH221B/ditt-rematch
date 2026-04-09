@@ -2,6 +2,7 @@ using DITT.Core.Enums;
 using DITT.Host.Services;
 using DITT.Host.Services.Interfaces;
 using DITT.PluginLoader;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DITT.Host.Controllers
@@ -67,6 +68,7 @@ namespace DITT.Host.Controllers
         }
 
         // Upload Plugin
+        [Authorize(Roles = "Admin")]
         [HttpPost("upload")]
         public async Task<IActionResult> Upload(IFormFile file)
         {
@@ -112,6 +114,7 @@ namespace DITT.Host.Controllers
         }
 
         // Unload Plugin
+        [Authorize(Roles = "Admin")]
         [HttpPost("unload")]
         public async Task<IActionResult> Unload([FromQuery] string name)
         {
@@ -136,6 +139,7 @@ namespace DITT.Host.Controllers
         }
 
         // Update Tool Status
+        [Authorize(Roles = "Admin")]
         [HttpPut("{name}/status")]
         public async Task<IActionResult> UpdateStatus(string name, [FromBody] UpdateToolStatusRequest request)
         {
@@ -162,6 +166,7 @@ namespace DITT.Host.Controllers
         }
 
         // Update Tool Premium Status
+        [Authorize(Roles = "Admin")]
         [HttpPut("{name}/premium")]
         public async Task<IActionResult> UpdatePremium(string name, [FromBody] UpdateToolPremiumRequest request)
         {
@@ -188,6 +193,7 @@ namespace DITT.Host.Controllers
         }
 
         // Delete Tool
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{name}")]
         public async Task<IActionResult> Delete(string name)
         {
