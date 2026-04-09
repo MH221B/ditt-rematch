@@ -1,7 +1,11 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { SearchDropdownComponent } from '../search-dropdown/search-dropdown.component';
 import { Tool } from '../../../models/tool.model';
+import { AuthService } from '../../../services/auth.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -67,13 +71,21 @@ import { Tool } from '../../../models/tool.model';
                         <a class="dropdown-item text-muted" href="#">Go Premium</a>
                       </li>
                     }
-                    <li><a class="dropdown-item" href="#" (click)="logout()">Logout</a></li>
+                    <li>
+                      <a class="dropdown-item" href="#" (click)="logout()" [class.loading]="isLoggingOut">
+                        @if (isLoggingOut) {
+                          <span>Logging out...</span>
+                        } @else {
+                          <span>Logout</span>
+                        }
+                      </a>
+                    </li>
                   </ul>
                 </div>
               } @else {
-                <!-- Login and Signup Buttons -->
+                <!-- Login and Register Buttons -->
                 <a href="/login" class="btn btn-outline-light me-2">Login</a>
-                <a href="/signup" class="btn btn-primary">Sign Up</a>
+                <a href="/register" class="btn btn-primary">Sign Up</a>
               }
             </div>
           </div>
@@ -82,14 +94,38 @@ import { Tool } from '../../../models/tool.model';
     </header>
   `
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   @Output() toolSelected = new EventEmitter<Tool>();
 
-  // Mock user state (replace with auth service later)
   isLoggedIn = false;
   username = 'User';
   isAdmin = false;
   isPremium = false;
+  isLoggingOut = false;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.updateAuthState();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private updateAuthState(): void {
+    this.isLoggedIn = this.authService.isAuthenticated();
+    if (this.isLoggedIn) {
+      this.username = this.authService.getUserEmail() || 'User';
+      // Can add support for admin/premium roles here based on user.roles
+    }
+  }
 
   onToolSelected(tool: Tool): void {
     this.toolSelected.emit(tool);
@@ -100,6 +136,33 @@ export class NavbarComponent {
   }
 
   logout(): void {
-    console.log('Logout feature not yet implemented');
+    if (this.isLoggingOut) return;
+
+    this.isLoggingOut = true;
+
+    this.authService.logout()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Clear auth state
+          this.authService.clearAuth();
+
+          // Show success message
+          alert('Logged out successfully');
+
+          // Redirect to login
+          this.router.navigate(['/login']);
+        },
+        error: (error) => {
+          this.isLoggingOut = false;
+          // Still clear auth state even if logout fails on backend
+          this.authService.clearAuth();
+          alert('Logout complete (backend error, but local session cleared)');
+          this.router.navigate(['/login']);
+        },
+        complete: () => {
+          this.isLoggingOut = false;
+        }
+      });
   }
 }
