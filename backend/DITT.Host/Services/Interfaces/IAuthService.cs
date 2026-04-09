@@ -8,5 +8,6 @@ public interface IAuthService
     Task<AuthResponse> LoginAsync(AuthRequest request);
     Task<UserDTO?> GetUserByIdAsync(string userId);
     Task<AuthResponse> LogoutAsync(string userId);
+    Task<AuthResponse> UpgradeToPremiumAsync(string userId);
     bool IsTokenExpired(string token);
 }

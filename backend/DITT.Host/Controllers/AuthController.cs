@@ -71,4 +71,21 @@ public class AuthController : ControllerBase
         _logger.LogInformation("GetProfile: Successfully retrieved user profile for ID: {UserId}", userId);
         return Ok(user);
     }
+
+    [Authorize]
+    [HttpPost("upgrade-premium")]
+    public async Task<IActionResult> UpgradeToPremium()
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "User ID not found in claims" });
+        }
+
+        var response = await _authService.UpgradeToPremiumAsync(userId);
+        if (!response.Success)
+            return BadRequest(new { message = response.Message });
+
+        return Ok(new { message = response.Message, user = response.User });
+    }
 }

@@ -150,6 +150,67 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<AuthResponse> UpgradeToPremiumAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "User not found!"
+            };
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        
+        // Check if user already has PremiumUser role
+        if (roles.Contains("PremiumUser"))
+        {
+            _logger.LogInformation("User already premium: {Email}", user.Email);
+            return new AuthResponse
+            {
+                Success = true,
+                Message = "User is already premium",
+                User = new UserDTO
+                {
+                    UserId = user.Id,
+                    Email = user.Email ?? string.Empty,
+                    Roles = roles.ToList()
+                }
+            };
+        }
+
+        // Add PremiumUser role
+        var result = await _userManager.AddToRoleAsync(user, "PremiumUser");
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            _logger.LogError("Failed to upgrade user to premium: {Email}. Errors: {Errors}", user.Email, errors);
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Failed to upgrade user to premium: " + errors
+            };
+        }
+
+        // Fetch updated roles
+        var updatedRoles = await _userManager.GetRolesAsync(user);
+        _logger.LogInformation("User upgraded to premium: {Email}", user.Email);
+
+        return new AuthResponse
+        {
+            Success = true,
+            Message = "User upgraded to premium successfully",
+            User = new UserDTO
+            {
+                UserId = user.Id,
+                Email = user.Email ?? string.Empty,
+                Roles = updatedRoles.ToList()
+            }
+        };
+    }
+
     public bool IsTokenExpired(string token)
     {
         try
