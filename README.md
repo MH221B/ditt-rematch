@@ -90,17 +90,17 @@ ditt-rematch/
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Frontend Shell (Angular)                     │
-│  - Bootstrap: index.html → main.ts → bootstrap.ts              │
+│  - Bootstrap: index.html → main.ts → bootstrap.ts               │
 │  - Module Federation Host (MFE framework)                       │
 │  - Dynamically loads plugin components at runtime               │
 └─────────────────────────────────────────────────────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                  Backend API (ASP.NET Core)                     │
-│  - Controllers: Auth, Health, Packages, Tools                  │
+│  - Controllers: Auth, Health, Packages, Tools                   │
 │  - Plugin management endpoints                                  │
-│  - Bundle serving: /api/packages/{id}/bundle/{**path}          │
-│  - Database: PostgreSQL via EF Core                            │
+│  - Bundle serving: /api/packages/{id}/bundle/{**path}           │
+│  - Database: PostgreSQL via EF Core                             │
 └─────────────────────────────────────────────────────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
@@ -108,7 +108,7 @@ ditt-rematch/
 │  - PluginManager discovers and loads DLL assemblies             │
 │  - Each plugin implements IToolPlugin                           │
 │  - Plugin DI container for ConfigureServices()                  │
-│  - Custom AssemblyLoadContext per plugin                       │
+│  - Custom AssemblyLoadContext per plugin                        │
 └─────────────────────────────────────────────────────────────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
