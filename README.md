@@ -6,6 +6,7 @@ A modern, extensible platform for building and hosting developer utility plugins
 
 ## Table of Contents
 
+- [A Few Words Before We Start](#a-few-words-before-we-start)
 - [Project Overview](#project-overview)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
@@ -15,6 +16,12 @@ A modern, extensible platform for building and hosting developer utility plugins
 - [Database Setup](#database-setup)
 - [Plugin Development](#plugin-development)
 - [Development Workflows](#development-workflows)
+
+---
+
+## A Few Words Before We Start
+
+This was originally a school project. I attempted to build it in Java using Spring Boot, Spring Framework (sp4j), and Thymeleaf, but it didn't work out all that well due to .jar locking issues. I revisited it with a complete rewrite in .NET and Angular since I'm currently being benched at my company so I had too much free time — it's much sloppier in some areas due to me not giving a fuck, but the dynamic plugin system actually works, so I'm calling it done. 
 
 ---
 
