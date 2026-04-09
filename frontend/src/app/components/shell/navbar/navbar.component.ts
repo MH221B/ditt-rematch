@@ -136,7 +136,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       // Extract admin/premium roles from user
       const roles = this.authService.getUserRoles();
       this.isAdmin = roles.includes('Admin');
-      this.isPremium = roles.includes('Premium');
+      this.isPremium = roles.includes('PremiumUser');
     } else {
       this.username = 'User';
       this.isAdmin = false;
@@ -149,7 +149,43 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   setPremium(): void {
-    console.log('Premium subscription feature not yet implemented');
+    if (this.isLoggingOut) return;
+
+    this.isLoggingOut = true;
+
+    this.authService.upgradeToPremium()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          // Update user info with new roles
+          const currentUser = this.authService.getCurrentUser();
+          if (currentUser && response.user) {
+            currentUser.roles = response.user.roles;
+            this.authService.setCurrentUser(currentUser);
+          }
+
+          // Show success message
+          Swal.fire({
+            title: 'Success',
+            text: 'Successfully upgraded to Premium!',
+            icon: 'success'
+          });
+          this.isLoggingOut = false;
+        },
+        error: (error) => {
+          this.isLoggingOut = false;
+          const errorMessage = error.error?.message || 'Failed to upgrade to premium';
+          Swal.fire({
+            title: 'Error',
+            text: errorMessage,
+            icon: 'error'
+          });
+          console.error('Premium upgrade error:', error);
+        },
+        complete: () => {
+          this.isLoggingOut = false;
+        }
+      });
   }
 
   logout(): void {

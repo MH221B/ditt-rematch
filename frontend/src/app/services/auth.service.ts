@@ -126,4 +126,11 @@ export class AuthService {
     const user = this.getCurrentUser();
     return user?.roles || [];
   }
+
+  /**
+   * Upgrade current user to premium
+   */
+  upgradeToPremium(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/upgrade-premium`, {});
+  }
 }
