@@ -128,6 +128,14 @@ export class AuthService {
   }
 
   /**
+   * Check if user has premium role
+   */
+  isPremiumUser(): boolean {
+    const roles = this.getUserRoles();
+    return roles.includes('PremiumUser');
+  }
+
+  /**
    * Upgrade current user to premium
    */
   upgradeToPremium(): Observable<any> {

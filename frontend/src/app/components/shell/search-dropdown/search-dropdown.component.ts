@@ -12,9 +12,11 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { SearchService } from '../../../services/search.service';
+import { AuthService } from '../../../services/auth.service';
 import { Tool } from '../../../models/tool.model';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-search-dropdown',
@@ -192,7 +194,7 @@ export class SearchDropdownComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private searchService: SearchService) {}
+  constructor(private searchService: SearchService, private authService: AuthService) {}
 
   ngOnInit(): void {
     // Pre-load tools in background
@@ -227,6 +229,27 @@ export class SearchDropdownComponent implements OnInit, OnDestroy {
 
   selectTool(event: Event, tool: Tool): void {
     event.preventDefault();
+    
+    // Check if tool is premium and user doesn't have premium access
+    if (tool.isPremium && !this.authService.isPremiumUser()) {
+      Swal.fire({
+        title: 'Premium Tool',
+        text: 'This tool requires a premium subscription. Upgrade to access it.',
+        icon: 'warning',
+        confirmButtonText: 'Go Premium',
+        showCancelButton: true,
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Navigate to premium upgrade page
+          // TODO: Update this route based on your actual premium/upgrade route
+          // this.router.navigate(['/premium']);
+        }
+      });
+      this.closeDropdown();
+      return; // Don't select the tool
+    }
+    
     this.toolSelected.emit(tool);
     this.closeDropdown();
   }

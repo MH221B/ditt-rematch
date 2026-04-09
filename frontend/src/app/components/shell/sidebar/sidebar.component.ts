@@ -4,7 +4,9 @@ import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PluginService } from '../../../services/plugin.service';
+import { AuthService } from '../../../services/auth.service';
 import { Tool, ToolStatus } from '../../../models/tool.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-sidebar',
@@ -63,7 +65,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private pluginService: PluginService) {}
+  constructor(private pluginService: PluginService, private authService: AuthService) {}
 
   ngOnInit(): void {
     this.loadTools();
@@ -95,6 +97,24 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   selectTool(tool: Tool): void {
+    // Check if tool is premium and user doesn't have premium access
+    if (tool.isPremium && !this.authService.isPremiumUser()) {
+      Swal.fire({
+        title: 'Premium Tool',
+        text: 'This tool requires a premium subscription. Upgrade to access it.',
+        icon: 'warning',
+        confirmButtonText: 'Go Premium',
+        showCancelButton: true,
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Navigate to premium upgrade page
+          // TODO: Update this route based on your actual premium/upgrade route
+          // this.router.navigate(['/premium']);
+        }
+      });
+      return; // Don't select the tool
+    }
     this.toolSelected.emit(tool);
   }
 }
