@@ -68,7 +68,7 @@ namespace DITT.Host.Controllers
         }
 
         // Upload Plugin
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         [HttpPost("upload")]
         public async Task<IActionResult> Upload(IFormFile file)
         {
