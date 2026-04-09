@@ -97,8 +97,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   selectTool(tool: Tool): void {
-    // Check if tool is premium and user doesn't have premium access
-    if (tool.isPremium && !this.authService.isPremiumUser()) {
+    // Check if tool is premium and user doesn't have premium access (admins can always access)
+    const roles = this.authService.getUserRoles();
+    const isPremium = roles.includes('PremiumUser');
+    const isAdmin = roles.includes('Admin');
+    
+    if (tool.isPremium && !isPremium && !isAdmin) {
       Swal.fire({
         title: 'Premium Tool',
         text: 'This tool requires a premium subscription. Upgrade to access it.',

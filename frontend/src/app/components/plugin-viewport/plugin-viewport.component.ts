@@ -683,8 +683,8 @@ export class PluginViewportComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   selectToolFromGrid(tool: Tool): void {
-    // Check if tool is premium and user doesn't have premium access
-    if (tool.isPremium && !this.authService.isPremiumUser()) {
+    // Check if tool is premium and user doesn't have premium access (admins can always access)
+    if (tool.isPremium && !this.authService.isPremiumUser() && !this.isAdmin) {
       Swal.fire({
         title: 'Premium Tool',
         text: 'This tool requires a premium subscription. Upgrade to access it.',
