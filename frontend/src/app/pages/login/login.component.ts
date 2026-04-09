@@ -73,23 +73,24 @@ import { AuthService } from '../../services/auth.service';
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background-color: var(--background-color);
       padding: 20px;
     }
 
     .login-card {
       width: 100%;
       max-width: 400px;
-      background: white;
+      background-color: var(--secondary-color-1);
       padding: 40px;
       border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--secondary-color);
     }
 
     .login-card h2 {
       text-align: center;
       margin-bottom: 30px;
-      color: #333;
+      color: var(--text-color);
       font-size: 28px;
       font-weight: 600;
     }
@@ -101,7 +102,7 @@ import { AuthService } from '../../services/auth.service';
     .form-group label {
       display: block;
       margin-bottom: 8px;
-      color: #555;
+      color: var(--text-color);
       font-weight: 500;
       font-size: 14px;
     }
@@ -109,16 +110,25 @@ import { AuthService } from '../../services/auth.service';
     .form-control {
       width: 100%;
       padding: 10px 15px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--secondary-color-2);
       border-radius: 4px;
       font-size: 14px;
       transition: border-color 0.3s;
+      background-color: var(--background-color);
+      color: var(--text-color);
+    }
+
+    .form-control::placeholder {
+      color: rgba(235, 244, 246, 0.5);
+      opacity: 1;
     }
 
     .form-control:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: var(--secondary-color);
+      background-color: var(--secondary-color-1);
+      color: var(--text-color);
+      box-shadow: none;
     }
 
     .form-control:disabled {
@@ -137,14 +147,14 @@ import { AuthService } from '../../services/auth.service';
     }
 
     .btn-primary {
-      background-color: #667eea;
-      color: white;
+      background-color: var(--primary-color);
+      color: var(--text-color);
     }
 
     .btn-primary:hover:not(:disabled) {
-      background-color: #5568d3;
+      background-color: var(--secondary-color);
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 5px 15px rgba(8, 131, 149, 0.3);
     }
 
     .btn-primary:disabled {
@@ -174,10 +184,11 @@ import { AuthService } from '../../services/auth.service';
       text-align: center;
       margin-top: 20px;
       font-size: 14px;
+      color: var(--text-color);
     }
 
     .signup-link a {
-      color: #667eea;
+      color: var(--secondary-color);
       text-decoration: none;
       font-weight: 600;
     }
